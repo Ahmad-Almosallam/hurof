@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet --version)",
+      "Bash(dotnet --list-sdks)",
+      "Bash(dotnet new:*)",
+      "Bash(dotnet sln:*)",
+      "Bash(dotnet add:*)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet ef:*)",
+      "Bash(dotnet tool:*)",
+      "Bash(npm create:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tailwindcss:*)",
+      "Bash(npm run:*)",
+      "Bash(taskkill //F //IM \"Hurof.Api.exe\")",
+      "Bash(dotnet run:*)",
+      "Bash(taskkill //F //IM \"node.exe\")",
+      "Bash(taskkill:*)",
+      "Bash(cmd /c \"taskkill /PID 473096 /F\" 2>&1)",
+      "Bash(cmd /c \"tasklist | findstr Hurof\" 2>&1)",
+      "Bash(powershell -Command \"Get-Process -Name 'Hurof.Api' -ErrorAction SilentlyContinue | Stop-Process -Force; Write-Output 'done'\")",
+      "Bash(node:*)"
+    ]
+  }
+}
