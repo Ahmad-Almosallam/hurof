@@ -70,7 +70,7 @@ export function HostDashboard() {
   const [cells, setCells] = useState<LetterCellResponse[]>([]);
   const [buzzWinner, setBuzzWinner] = useState<BuzzWinnerEvent | null>(null);
   const [gameOver, setGameOver] = useState<GameOverEvent | null>(null);
-  const [config, setConfig] = useState<SessionConfig>({ gridSize: 5, team1Color: '#e74c3c', team2Color: '#3498db' });
+  const [config, setConfig] = useState<SessionConfig>({ gridSize: 5, team1Color: '#0013a3', team2Color: '#0099ff' });
 
   const activeCellId = cells.find(c => c.state === 'Active')?.id ?? null;
   const [gridContainer, setGridContainer] = useState<HTMLDivElement | null>(null);
