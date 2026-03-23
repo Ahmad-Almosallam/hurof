@@ -52,7 +52,7 @@ export function QuestionCard({
       </div>
 
       <button
-        onClick={() => { setShowAnswer(false); onNextQuestion(); }}
+        onClick={onNextQuestion}
         disabled={isLoading}
         className="w-full py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm transition-colors disabled:opacity-50"
       >

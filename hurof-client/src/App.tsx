@@ -3,6 +3,7 @@ import { LandingPage } from './pages/LandingPage';
 import { HostDashboard } from './pages/host/HostDashboard';
 import { PlayerBuzzerPage } from './pages/player/PlayerBuzzerPage';
 import { TvDisplayPage } from './pages/tv/TvDisplayPage';
+import { PhpSessionPage } from './pages/admin/PhpSessionPage';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/host/dashboard" element={<HostDashboard />} />
         <Route path="/play/:sessionId" element={<PlayerBuzzerPage />} />
         <Route path="/tv/:sessionId" element={<TvDisplayPage />} />
+        <Route path="/php-session" element={<PhpSessionPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

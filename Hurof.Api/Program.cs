@@ -64,7 +64,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+// Caching & HTTP
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient();
+
 // Services
+builder.Services.AddScoped<IExternalQuestionService, ExternalQuestionService>();
 builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<ILetterService, LetterService>();
 builder.Services.AddScoped<IBuzzerService, BuzzerService>();

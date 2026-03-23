@@ -8,6 +8,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<GameSession> Sessions { get; set; }
     public DbSet<LetterCell> LetterCells { get; set; }
     public DbSet<Question> Questions { get; set; }
+    public DbSet<PhpSessionConfig> PhpSessionConfigs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -43,6 +44,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
         modelBuilder.Entity<Question>()
             .Property(q => q.Letter).HasMaxLength(5);
+
+        modelBuilder.Entity<PhpSessionConfig>()
+            .HasData(new PhpSessionConfig { Id = 1, PhpSessionId = "", UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc) });
 
         SeedQuestions(modelBuilder);
     }

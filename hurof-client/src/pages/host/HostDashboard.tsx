@@ -19,6 +19,14 @@ import type {
   SessionResponse,
 } from '../../types/api';
 
+function extractApiError(error: unknown): string {
+  if (error && typeof error === 'object' && 'response' in error) {
+    const data = (error as { response?: { data?: { error?: string } } }).response?.data;
+    if (data?.error) return data.error;
+  }
+  return 'حدث خطأ غير متوقع';
+}
+
 interface SessionConfig {
   gridSize: number;
   team1Color: string;
@@ -89,7 +97,7 @@ export function HostDashboard() {
   }, [session]);
 
   // Question query — only runs when there's an active cell
-  const { data: question } = useQuery({
+  const { data: question, error: questionError, isFetching: questionLoading } = useQuery({
     queryKey: queryKeys.question(session?.roomCode ?? '', activeCellId ?? ''),
     queryFn: () => getQuestion(session!.roomCode, activeCellId!),
     enabled: !!session && !!activeCellId,
@@ -310,16 +318,35 @@ export function HostDashboard() {
 
           {/* Question / placeholder */}
           <div className="flex-1">
-            {activeCellId && question ? (
-              <QuestionCard
-                question={question}
-                onNextQuestion={() => nextQMutation.mutate()}
-                onAssignTeam1={() => handleAssign(1)}
-                onAssignTeam2={() => handleAssign(2)}
-                team1Color={session.team1Color}
-                team2Color={session.team2Color}
-                isLoading={nextQMutation.isPending}
-              />
+            {activeCellId && questionLoading ? (
+              <div className="question-card bg-slate-800 rounded-2xl p-5 flex items-center justify-center">
+                <div className="w-6 h-6 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : activeCellId && (question || questionError || nextQMutation.error) ? (
+              (questionError || nextQMutation.error) ? (
+                <div className="question-card bg-slate-800 rounded-2xl p-5 flex flex-col gap-4 w-full">
+                  <div className="bg-red-900/50 border border-red-600 rounded-xl p-3 text-red-300 text-sm text-center">
+                    {extractApiError(questionError ?? nextQMutation.error)}
+                  </div>
+                  <button
+                    onClick={() => nextQMutation.mutate()}
+                    disabled={nextQMutation.isPending}
+                    className="w-full py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm transition-colors disabled:opacity-50"
+                  >
+                    سؤال آخر
+                  </button>
+                </div>
+              ) : (
+                <QuestionCard
+                  question={question!}
+                  onNextQuestion={() => nextQMutation.mutate()}
+                  onAssignTeam1={() => handleAssign(1)}
+                  onAssignTeam2={() => handleAssign(2)}
+                  team1Color={session.team1Color}
+                  team2Color={session.team2Color}
+                  isLoading={nextQMutation.isPending}
+                />
+              )
             ) : (
               <div className="letter-placeholder bg-slate-700/50 rounded-2xl p-5 text-slate-500 text-center text-sm">
                 اختر حرفاً من الشبكة

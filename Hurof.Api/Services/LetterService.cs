@@ -17,7 +17,8 @@ public interface ILetterService
 public class LetterService(
     AppDbContext db,
     IWinDetectionService winDetection,
-    IHubContext<GameHub> hubContext) : ILetterService
+    IHubContext<GameHub> hubContext,
+    IExternalQuestionService externalQuestions) : ILetterService
 {
     public async Task<SetLetterStateResponse?> SetStateAsync(string identifier, Guid cellId, LetterState newState)
     {
@@ -91,6 +92,10 @@ public class LetterService(
 
         if (cell is null) return null;
 
+        var external = await externalQuestions.GetQuestionAsync(cell.Letter);
+        if (external is not null)
+            return new QuestionResponse(Guid.Empty, cell.Letter, external.Value.Question, external.Value.Answer, cell.QuestionIndex, 1);
+
         return await GetQuestionAtIndex(cell.Letter, cell.QuestionIndex);
     }
 
@@ -103,6 +108,10 @@ public class LetterService(
             .FirstOrDefaultAsync(c => c.Id == cellId && c.SessionId == session.Id);
 
         if (cell is null) return null;
+
+        var external = await externalQuestions.GetQuestionAsync(cell.Letter);
+        if (external is not null)
+            return new QuestionResponse(Guid.Empty, cell.Letter, external.Value.Question, external.Value.Answer, cell.QuestionIndex, 1);
 
         var total = await db.Questions.CountAsync(q => q.Letter == cell.Letter);
         if (total == 0) return null;

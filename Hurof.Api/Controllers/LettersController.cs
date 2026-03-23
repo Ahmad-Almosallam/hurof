@@ -18,14 +18,28 @@ public class LettersController(ILetterService letterService) : ControllerBase
     [HttpGet("{cellId:guid}/question")]
     public async Task<IActionResult> GetQuestion(string identifier, Guid cellId)
     {
-        var question = await letterService.GetCurrentQuestionAsync(identifier, cellId);
-        return question is null ? NotFound() : Ok(question);
+        try
+        {
+            var question = await letterService.GetCurrentQuestionAsync(identifier, cellId);
+            return question is null ? NotFound() : Ok(question);
+        }
+        catch (ExternalApiException ex)
+        {
+            return UnprocessableEntity(new { error = ex.Message });
+        }
     }
 
     [HttpPost("{cellId:guid}/next-question")]
     public async Task<IActionResult> NextQuestion(string identifier, Guid cellId)
     {
-        var question = await letterService.GetNextQuestionAsync(identifier, cellId);
-        return question is null ? NotFound() : Ok(question);
+        try
+        {
+            var question = await letterService.GetNextQuestionAsync(identifier, cellId);
+            return question is null ? NotFound() : Ok(question);
+        }
+        catch (ExternalApiException ex)
+        {
+            return UnprocessableEntity(new { error = ex.Message });
+        }
     }
 }
