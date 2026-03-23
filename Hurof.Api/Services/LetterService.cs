@@ -69,7 +69,8 @@ public class LetterService(
                         winningPath = winResult.Path
                     });
 
-                db.Sessions.Remove(session);
+                session.Status = SessionStatus.Ended;
+                session.WinnerTeam = winResult.WinnerTeam;
                 await db.SaveChangesAsync();
             }
         }

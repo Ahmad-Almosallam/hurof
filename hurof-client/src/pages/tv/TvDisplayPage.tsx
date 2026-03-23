@@ -1,24 +1,28 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { RtlWrapper } from '../../components/layout/RtlWrapper';
 import { HexGrid } from '../../components/hex/HexGrid';
 import { BuzzBanner } from '../../components/ui/BuzzBanner';
 import { GameOverBanner } from '../../components/ui/GameOverBanner';
 import { TeamScoreBadge } from '../../components/ui/TeamScoreBadge';
+import { ConnectionStatus } from '../../components/ui/ConnectionStatus';
 import { useGameHub } from '../../hooks/useGameHub';
+import { useGridScale } from '../../hooks/useGridScale';
 import { queryKeys } from '../../lib/queryKeys';
 import { getSession } from '../../api/sessions';
 import { playBuzzer, unlockAudio } from '../../lib/buzzerSound';
-import type { BuzzWinnerEvent, GameOverEvent, LetterCellResponse } from '../../types/api';
+import type { BuzzWinnerEvent, GameOverEvent, GameResetEvent, LetterCellResponse } from '../../types/api';
 
 export function TvDisplayPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
+  const queryClient = useQueryClient();
   const [cells, setCells] = useState<LetterCellResponse[]>([]);
   const [buzzWinner, setBuzzWinner] = useState<BuzzWinnerEvent | null>(null);
   const [gameOver, setGameOver] = useState<GameOverEvent | null>(null);
+  const [gridContainer, setGridContainer] = useState<HTMLDivElement | null>(null);
 
-  const { data: session } = useQuery({
+  const { data: session, refetch } = useQuery({
     queryKey: queryKeys.session(sessionId!),
     queryFn: () => getSession(sessionId!),
     enabled: !!sessionId,
@@ -26,11 +30,12 @@ export function TvDisplayPage() {
     refetchOnWindowFocus: false,
   });
 
+  const gridScale = useGridScale(gridContainer, session?.gridSize ?? 5);
+
   useEffect(() => {
     if (session) setCells(session.cells);
   }, [session]);
 
-  // Unlock AudioContext on first interaction so buzzer sound works
   useEffect(() => {
     const unlock = () => unlockAudio();
     window.addEventListener('click', unlock, { once: true });
@@ -41,13 +46,22 @@ export function TvDisplayPage() {
     };
   }, []);
 
-  useGameHub(sessionId ?? '', {
+  const { connectionState } = useGameHub(sessionId ?? '', {
     onGridUpdate: useCallback((cell: LetterCellResponse) => {
       setCells(prev => prev.map(c => c.id === cell.id ? cell : c));
     }, []),
     onBuzzWinner: useCallback((e: BuzzWinnerEvent) => { playBuzzer(); setBuzzWinner(e); }, []),
     onGameOver: useCallback((e: GameOverEvent) => setGameOver(e), []),
     onBuzzerReset: useCallback(() => setBuzzWinner(null), []),
+    onGameReset: useCallback((e: GameResetEvent) => {
+      setCells(e.cells);
+      setGameOver(null);
+      setBuzzWinner(null);
+    }, []),
+    onReconnected: useCallback(() => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.session(sessionId!) });
+      refetch();
+    }, [queryClient, sessionId, refetch]),
   });
 
   const winningPath = gameOver?.winningPath
@@ -67,22 +81,26 @@ export function TvDisplayPage() {
 
   return (
     <RtlWrapper>
-      <div className="min-h-screen bg-slate-900 overflow-hidden flex flex-col">
+      <div className="game-board-root" style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', backgroundColor: '#0f172a' }}>
         {/* Score bar */}
-        <div className="flex items-center justify-between px-10 py-4 bg-slate-800">
+        <div className="flex items-center justify-between px-6 py-3 bg-slate-800 flex-shrink-0">
           <TeamScoreBadge label="فريق ١" score={team1Score} color={session.team1Color} />
           <div className="flex flex-col items-center gap-1">
-            <h1 className="text-3xl font-black text-amber-400">حروف</h1>
-            <div className="flex items-center gap-2 bg-slate-700 px-4 py-1.5 rounded-xl border border-slate-600">
-              <span className="text-slate-400 text-sm font-bold">رمز الغرفة</span>
-              <span className="text-white font-black text-2xl tracking-widest">{session.roomCode}</span>
+            <h1 className="text-2xl font-black text-amber-400">حروف</h1>
+            <div className="flex items-center gap-2 bg-slate-700 px-3 py-1 rounded-xl border border-slate-600">
+              <span className="text-slate-400 text-xs font-bold">رمز الغرفة</span>
+              <span className="text-white font-black text-xl tracking-widest">{session.roomCode}</span>
             </div>
+            <ConnectionStatus state={connectionState} />
           </div>
           <TeamScoreBadge label="فريق ٢" score={team2Score} color={session.team2Color} />
         </div>
 
-        {/* Grid — centred, fills remaining space */}
-        <div className="flex-1 flex items-center justify-center p-8">
+        {/* Grid — fills remaining space, scales to fit */}
+        <div
+          ref={setGridContainer}
+          style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
+        >
           <HexGrid
             cells={cells}
             gridSize={session.gridSize}
@@ -90,6 +108,7 @@ export function TvDisplayPage() {
             team2Color={session.team2Color}
             winningPath={winningPath}
             interactive={false}
+            scale={gridScale}
           />
         </div>
       </div>

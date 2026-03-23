@@ -7,14 +7,17 @@ import { QuestionCard } from '../../components/ui/QuestionCard';
 import { SplashScreen } from '../../components/ui/SplashScreen';
 import { GameOverBanner } from '../../components/ui/GameOverBanner';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { ConnectionStatus } from '../../components/ui/ConnectionStatus';
 import { useGameHub } from '../../hooks/useGameHub';
+import { useGridScale } from '../../hooks/useGridScale';
 import { queryKeys } from '../../lib/queryKeys';
-import { createSession, deleteSession } from '../../api/sessions';
+import { createSession, deleteSession, resetSession } from '../../api/sessions';
 import { setCellState, getQuestion, nextQuestion } from '../../api/letters';
 import { resetBuzzer } from '../../api/buzzer';
 import type {
   BuzzWinnerEvent,
   GameOverEvent,
+  GameResetEvent,
   LetterCellResponse,
   SessionResponse,
 } from '../../types/api';
@@ -33,33 +36,6 @@ interface SessionConfig {
   team2Color: string;
 }
 
-const HEX_W_N = 110;
-const HEX_H_N = HEX_W_N * 1.1547;
-const HEX_ROW_STEP_N = HEX_H_N * 0.75 - 1;
-const EDGE_TOTAL = (12 + 6) * 2;
-
-function computeNaturalSize(gridSize: number) {
-  return {
-    w: gridSize * HEX_W_N + HEX_W_N / 2 + EDGE_TOTAL,
-    h: HEX_ROW_STEP_N * gridSize + (HEX_H_N - HEX_ROW_STEP_N) + EDGE_TOTAL,
-  };
-}
-
-function useGridScale(el: HTMLDivElement | null, gridSize: number) {
-  const [scale, setScale] = useState(1);
-  useEffect(() => {
-    if (!el) return;
-    const { w, h } = computeNaturalSize(gridSize);
-    const observer = new ResizeObserver(([entry]) => {
-      if (!entry) return;
-      const { width, height } = entry.contentRect;
-      setScale(Math.max(Math.min(width / w, height / h, 1), 0.3));
-    });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [el, gridSize]);
-  return scale;
-}
 
 export function HostDashboard() {
   const navigate = useNavigate();
@@ -70,6 +46,8 @@ export function HostDashboard() {
   const [cells, setCells] = useState<LetterCellResponse[]>([]);
   const [buzzWinner, setBuzzWinner] = useState<BuzzWinnerEvent | null>(null);
   const [gameOver, setGameOver] = useState<GameOverEvent | null>(null);
+  const [players, setPlayers] = useState<string[]>([]);
+  const [sidebarTab, setSidebarTab] = useState<'game' | 'players'>('game');
   const [config, setConfig] = useState<SessionConfig>({ gridSize: 5, team1Color: '#0013a3', team2Color: '#0099ff' });
 
   const activeCellId = cells.find(c => c.state === 'Active')?.id ?? null;
@@ -106,15 +84,23 @@ export function HostDashboard() {
   });
 
   // SignalR
-  useGameHub(session?.roomCode ?? '', {
+  const { connectionState } = useGameHub(session?.roomCode ?? '', {
     onGridUpdate: useCallback((cell: LetterCellResponse) => {
       setCells(prev => prev.map(c => c.id === cell.id ? cell : c));
     }, []),
     onBuzzWinner: useCallback((e: BuzzWinnerEvent) => setBuzzWinner(e), []),
-    onGameOver: useCallback((e: GameOverEvent) => {
-      setGameOver(e);
-    }, []),
+    onGameOver: useCallback((e: GameOverEvent) => setGameOver(e), []),
     onBuzzerReset: useCallback(() => setBuzzWinner(null), []),
+    onGameReset: useCallback((e: GameResetEvent) => {
+      setCells(e.cells);
+      setGameOver(null);
+      setBuzzWinner(null);
+      queryClient.invalidateQueries({ queryKey: queryKeys.question(session?.roomCode ?? '', '') });
+    }, [queryClient, session?.roomCode]),
+    onPlayerListUpdate: useCallback((list: string[]) => setPlayers(list), []),
+    onReconnected: useCallback(() => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.session(session?.roomCode ?? '') });
+    }, [queryClient, session?.roomCode]),
   });
 
   // Mutations
@@ -154,6 +140,10 @@ export function HostDashboard() {
       sessionStorage.removeItem('hurof_token');
       navigate('/', { replace: true });
     },
+  });
+
+  const newRoundMutation = useMutation({
+    mutationFn: () => resetSession(session!.roomCode),
   });
 
   const handleCellClick = (cell: LetterCellResponse) => {
@@ -302,57 +292,96 @@ export function HostDashboard() {
             </div>
           </div>
 
-          {/* Buzz winner */}
-          {buzzWinner && (
-            <div className="flex flex-col gap-2 bg-amber-500/10 border border-amber-500 rounded-2xl p-4">
-              <div className="text-amber-400 text-xs font-bold uppercase tracking-wide">ضغط أول!</div>
-              <div className="text-white font-black text-xl">{buzzWinner.playerName}</div>
-              <button
-                onClick={handleResetBuzzer}
-                className="w-full py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-bold transition-colors"
-              >
-                إعادة الطارئ
-              </button>
+          {/* Tab switcher */}
+          <div className="flex rounded-xl overflow-hidden border border-slate-700">
+            <button
+              onClick={() => setSidebarTab('game')}
+              className={`flex-1 py-2 text-sm font-bold transition-colors ${sidebarTab === 'game' ? 'bg-amber-500 text-slate-900' : 'bg-slate-700 text-slate-400 hover:text-white'}`}
+            >
+              سؤال
+            </button>
+            <button
+              onClick={() => setSidebarTab('players')}
+              className={`flex-1 py-2 text-sm font-bold transition-colors ${sidebarTab === 'players' ? 'bg-amber-500 text-slate-900' : 'bg-slate-700 text-slate-400 hover:text-white'}`}
+            >
+              اللاعبون {players.length > 0 && `(${players.length})`}
+            </button>
+          </div>
+
+          {sidebarTab === 'game' ? (
+            <>
+              {/* Buzz winner */}
+              {buzzWinner && (
+                <div className="flex flex-col gap-2 bg-amber-500/10 border border-amber-500 rounded-2xl p-4">
+                  <div className="text-amber-400 text-xs font-bold uppercase tracking-wide">ضغط أول!</div>
+                  <div className="text-white font-black text-xl">{buzzWinner.playerName}</div>
+                  <button
+                    onClick={handleResetBuzzer}
+                    className="w-full py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-bold transition-colors"
+                  >
+                    إعادة الطارئ
+                  </button>
+                </div>
+              )}
+
+              {/* Question / placeholder */}
+              <div className="flex-1">
+                {activeCellId && questionLoading ? (
+                  <div className="question-card bg-slate-800 rounded-2xl p-5 flex items-center justify-center">
+                    <div className="w-6 h-6 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : activeCellId && (question || questionError || nextQMutation.error) ? (
+                  (questionError || nextQMutation.error) ? (
+                    <div className="question-card bg-slate-800 rounded-2xl p-5 flex flex-col gap-4 w-full">
+                      <div className="bg-red-900/50 border border-red-600 rounded-xl p-3 text-red-300 text-sm text-center">
+                        {extractApiError(questionError ?? nextQMutation.error)}
+                      </div>
+                      <button
+                        onClick={() => nextQMutation.mutate()}
+                        disabled={nextQMutation.isPending}
+                        className="w-full py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm transition-colors disabled:opacity-50"
+                      >
+                        سؤال آخر
+                      </button>
+                    </div>
+                  ) : (
+                    <QuestionCard
+                      question={question!}
+                      onNextQuestion={() => nextQMutation.mutate()}
+                      onAssignTeam1={() => handleAssign(1)}
+                      onAssignTeam2={() => handleAssign(2)}
+                      team1Color={session.team1Color}
+                      team2Color={session.team2Color}
+                      isLoading={nextQMutation.isPending}
+                    />
+                  )
+                ) : (
+                  <div className="letter-placeholder bg-slate-700/50 rounded-2xl p-5 text-slate-500 text-center text-sm">
+                    اختر حرفاً من الشبكة
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            /* Players list */
+            <div className="flex-1 flex flex-col gap-2">
+              {players.length === 0 ? (
+                <div className="bg-slate-700/50 rounded-2xl p-5 text-slate-500 text-center text-sm">
+                  لا يوجد لاعبون متصلون
+                </div>
+              ) : (
+                players.map((name, i) => (
+                  <div key={i} className="flex items-center gap-3 bg-slate-700/50 rounded-xl px-4 py-2.5">
+                    <div className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
+                    <span className="text-white font-bold text-sm">{name}</span>
+                  </div>
+                ))
+              )}
             </div>
           )}
 
-          {/* Question / placeholder */}
-          <div className="flex-1">
-            {activeCellId && questionLoading ? (
-              <div className="question-card bg-slate-800 rounded-2xl p-5 flex items-center justify-center">
-                <div className="w-6 h-6 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-              </div>
-            ) : activeCellId && (question || questionError || nextQMutation.error) ? (
-              (questionError || nextQMutation.error) ? (
-                <div className="question-card bg-slate-800 rounded-2xl p-5 flex flex-col gap-4 w-full">
-                  <div className="bg-red-900/50 border border-red-600 rounded-xl p-3 text-red-300 text-sm text-center">
-                    {extractApiError(questionError ?? nextQMutation.error)}
-                  </div>
-                  <button
-                    onClick={() => nextQMutation.mutate()}
-                    disabled={nextQMutation.isPending}
-                    className="w-full py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm transition-colors disabled:opacity-50"
-                  >
-                    سؤال آخر
-                  </button>
-                </div>
-              ) : (
-                <QuestionCard
-                  question={question!}
-                  onNextQuestion={() => nextQMutation.mutate()}
-                  onAssignTeam1={() => handleAssign(1)}
-                  onAssignTeam2={() => handleAssign(2)}
-                  team1Color={session.team1Color}
-                  team2Color={session.team2Color}
-                  isLoading={nextQMutation.isPending}
-                />
-              )
-            ) : (
-              <div className="letter-placeholder bg-slate-700/50 rounded-2xl p-5 text-slate-500 text-center text-sm">
-                اختر حرفاً من الشبكة
-              </div>
-            )}
-          </div>
+          {/* Connection status */}
+          <ConnectionStatus state={connectionState} />
 
           {/* Copy links */}
           <div className="flex flex-col gap-2">
@@ -412,6 +441,7 @@ export function HostDashboard() {
           winnerTeam={gameOver.winnerTeam}
           team1Color={session.team1Color}
           team2Color={session.team2Color}
+          onNewRound={() => newRoundMutation.mutate()}
           onBack={() => navigate('/')}
         />
       )}

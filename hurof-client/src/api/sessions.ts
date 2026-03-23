@@ -15,3 +15,6 @@ export const createSession = (body: CreateSessionRequest): Promise<SessionRespon
 
 export const deleteSession = (id: string): Promise<void> =>
   api.delete(`/api/sessions/${id}`);
+
+export const resetSession = (identifier: string): Promise<void> =>
+  api.post(`/api/sessions/${identifier}/reset`);

@@ -7,6 +7,7 @@ interface GameOverBannerProps {
   team2Color: string;
   onDone?: () => void;
   onBack?: () => void;
+  onNewRound?: () => void;
 }
 
 const CONFETTI_COUNT = 80;
@@ -47,7 +48,7 @@ function Confetti({ winnerColor }: { winnerColor: string }) {
   );
 }
 
-export function GameOverBanner({ winnerTeam, team1Color, team2Color, onDone, onBack }: GameOverBannerProps) {
+export function GameOverBanner({ winnerTeam, team1Color, team2Color, onDone, onBack, onNewRound }: GameOverBannerProps) {
   const winnerColor = winnerTeam === 1 ? team1Color : winnerTeam === 2 ? team2Color : '#6b7280';
   const winnerLabel = winnerTeam === 1 ? 'فريق ١' : winnerTeam === 2 ? 'فريق ٢' : null;
 
@@ -89,15 +90,24 @@ export function GameOverBanner({ winnerTeam, team1Color, team2Color, onDone, onB
         <div className="text-4xl font-black text-slate-400">انتهت اللعبة</div>
       )}
 
-      {onBack && (
-        <button
-          onClick={onBack}
-          className="mt-4 px-8 py-3 rounded-2xl bg-slate-700 hover:bg-slate-600 text-white font-bold text-lg transition-colors"
-          style={{ animation: 'winner-pop 0.5s 0.5s cubic-bezier(0.34,1.56,0.64,1) both' }}
-        >
-          العودة للرئيسية
-        </button>
-      )}
+      <div className="flex gap-3 mt-4" style={{ animation: 'winner-pop 0.5s 0.5s cubic-bezier(0.34,1.56,0.64,1) both' }}>
+        {onNewRound && (
+          <button
+            onClick={onNewRound}
+            className="px-8 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold text-lg transition-colors"
+          >
+            🔄 جولة جديدة
+          </button>
+        )}
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="px-8 py-3 rounded-2xl bg-slate-700 hover:bg-slate-600 text-white font-bold text-lg transition-colors"
+          >
+            العودة للرئيسية
+          </button>
+        )}
+      </div>
     </div>
   );
 }

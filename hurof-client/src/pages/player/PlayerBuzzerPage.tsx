@@ -1,24 +1,27 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RtlWrapper } from '../../components/layout/RtlWrapper';
 import { GameOverBanner } from '../../components/ui/GameOverBanner';
+import { ConnectionStatus } from '../../components/ui/ConnectionStatus';
 import { useGameHub } from '../../hooks/useGameHub';
 import { queryKeys } from '../../lib/queryKeys';
 import { getSession } from '../../api/sessions';
 import { buzz } from '../../api/buzzer';
-import type { BuzzWinnerEvent, GameOverEvent } from '../../types/api';
+import { getHubConnection } from '../../lib/signalr';
+import type { BuzzWinnerEvent, GameOverEvent, GameResetEvent } from '../../types/api';
 
 export function PlayerBuzzerPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [playerName, setPlayerName] = useState(() => sessionStorage.getItem('hurof_player') ?? '');
   const [nameSubmitted, setNameSubmitted] = useState(!!sessionStorage.getItem('hurof_player'));
   const [buzzWinner, setBuzzWinner] = useState<BuzzWinnerEvent | null>(null);
   const [gameOver, setGameOver] = useState<GameOverEvent | null>(null);
   const [activeCellId, setActiveCellId] = useState<string | null>(null);
 
-  const { data: session, isLoading } = useQuery({
+  const { data: session, isLoading, refetch } = useQuery({
     queryKey: queryKeys.session(sessionId!),
     queryFn: () => getSession(sessionId!),
     enabled: !!sessionId,
@@ -33,7 +36,16 @@ export function PlayerBuzzerPage() {
     }
   }, [session]);
 
-  useGameHub(sessionId ?? '', {
+  // After name is submitted, invoke JoinAsPlayer so the host can see us
+  useEffect(() => {
+    if (!nameSubmitted || !sessionId || !playerName) return;
+    const conn = getHubConnection(sessionId);
+    if (conn.state === 'Connected') {
+      conn.invoke('JoinAsPlayer', sessionId, playerName).catch(() => {});
+    }
+  }, [nameSubmitted, sessionId, playerName]);
+
+  const { connectionState } = useGameHub(sessionId ?? '', {
     onGridUpdate: useCallback((cell: { id: string; state: string }) => {
       if (cell.state === 'Active') setActiveCellId(cell.id);
       else setActiveCellId(prev => prev === cell.id ? null : prev);
@@ -41,6 +53,30 @@ export function PlayerBuzzerPage() {
     onBuzzWinner: useCallback((e: BuzzWinnerEvent) => setBuzzWinner(e), []),
     onGameOver: useCallback((e: GameOverEvent) => setGameOver(e), []),
     onBuzzerReset: useCallback(() => setBuzzWinner(null), []),
+    onGameReset: useCallback((_e: GameResetEvent) => {
+      setGameOver(null);
+      setBuzzWinner(null);
+      setActiveCellId(null);
+    }, []),
+    onReconnected: useCallback(() => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.session(sessionId!) });
+      refetch().then(result => {
+        if (result.data?.cells) {
+          const active = result.data.cells.find(c => c.state === 'Active');
+          setActiveCellId(active?.id ?? null);
+        }
+        if (result.data?.buzzerLockedByPlayer) {
+          setBuzzWinner({ playerName: result.data.buzzerLockedByPlayer, lockedAt: result.data.buzzerLockedAt ?? '' });
+        } else {
+          setBuzzWinner(null);
+        }
+      });
+      // Re-register as player after reconnect
+      if (playerName && sessionId) {
+        const conn = getHubConnection(sessionId);
+        conn.invoke('JoinAsPlayer', sessionId, playerName).catch(() => {});
+      }
+    }, [queryClient, sessionId, refetch, playerName]),
   });
 
   const buzzMutation = useMutation({
@@ -150,9 +186,7 @@ export function PlayerBuzzerPage() {
             : !hasActiveLetter ? '⏳ انتظر...' : '🔔 اضغط!'}
         </button>
 
-        {session.status === 'Ended' && !gameOver && (
-          <p className="text-slate-500">انتهت اللعبة</p>
-        )}
+        <ConnectionStatus state={connectionState} />
 
         <button
           onClick={handleExit}

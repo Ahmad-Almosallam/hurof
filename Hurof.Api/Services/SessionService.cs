@@ -13,6 +13,7 @@ public interface ISessionService
     Task<SessionResponse> CreateSessionAsync(CreateSessionRequest request);
     Task<SessionResponse?> GetSessionAsync(string identifier);
     Task<bool> EndSessionAsync(string identifier);
+    Task<bool> ResetSessionAsync(string identifier);
 }
 
 public class SessionService(
@@ -57,6 +58,33 @@ public class SessionService(
 
         db.Sessions.Remove(session);
         await db.SaveChangesAsync();
+
+        return true;
+    }
+
+    public async Task<bool> ResetSessionAsync(string identifier)
+    {
+        var session = await ResolveSessionAsync(identifier);
+        if (session is null) return false;
+
+        var oldCells = db.LetterCells.Where(c => c.SessionId == session.Id);
+        db.LetterCells.RemoveRange(oldCells);
+
+        var newCells = gridGenerator.GenerateGrid(session.Id, session.GridSize);
+        db.LetterCells.AddRange(newCells);
+
+        session.Status = SessionStatus.Active;
+        session.WinnerTeam = null;
+        session.BuzzerLockedByPlayer = null;
+        session.BuzzerLockedAt = null;
+
+        await db.SaveChangesAsync();
+
+        var cellResponses = newCells.Select(c =>
+            new LetterCellResponse(c.Id, c.Row, c.Col, c.Letter, c.State.ToString())).ToList();
+
+        await hubContext.Clients.Group(session.RoomCode)
+            .SendAsync("GameReset", new { cells = cellResponses });
 
         return true;
     }

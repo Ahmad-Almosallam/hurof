@@ -53,6 +53,12 @@ export interface GameOverEvent {
   winningPath: GridPosition[] | null;
 }
 
+export interface GameResetEvent {
+  cells: LetterCellResponse[];
+}
+
+export type PlayerInfo = string;
+
 export interface BuzzWinnerEvent {
   playerName: string;
   lockedAt: string;

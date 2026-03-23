@@ -1,5 +1,6 @@
 using Hurof.Api.DTOs.Sessions;
 using Hurof.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hurof.Api.Controllers;
@@ -27,5 +28,13 @@ public class SessionsController(ISessionService sessionService) : ControllerBase
     {
         var ended = await sessionService.EndSessionAsync(identifier);
         return ended ? NoContent() : NotFound();
+    }
+
+    [HttpPost("{identifier}/reset")]
+    [Authorize]
+    public async Task<IActionResult> Reset(string identifier)
+    {
+        var reset = await sessionService.ResetSessionAsync(identifier);
+        return reset ? Ok() : NotFound();
     }
 }
