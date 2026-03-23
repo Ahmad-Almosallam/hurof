@@ -83,13 +83,13 @@ export function TvDisplayPage() {
     <RtlWrapper>
       <div className="game-board-root" style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', backgroundColor: '#0f172a' }}>
         {/* Score bar */}
-        <div className="flex items-center justify-between px-6 py-3 bg-slate-800 flex-shrink-0">
+        <div className="flex items-center justify-between px-4 py-1.5 bg-slate-800 flex-shrink-0">
           <TeamScoreBadge label="فريق ١" score={team1Score} color={session.team1Color} />
-          <div className="flex flex-col items-center gap-1">
-            <h1 className="text-2xl font-black text-amber-400">حروف</h1>
-            <div className="flex items-center gap-2 bg-slate-700 px-3 py-1 rounded-xl border border-slate-600">
+          <div className="flex items-center gap-3">
+            <span className="text-base font-black text-amber-400">حروف</span>
+            <div className="flex items-center gap-1.5 bg-slate-700 px-2.5 py-1 rounded-lg border border-slate-600">
               <span className="text-slate-400 text-xs font-bold">رمز الغرفة</span>
-              <span className="text-white font-black text-xl tracking-widest">{session.roomCode}</span>
+              <span className="text-white font-black text-base tracking-widest">{session.roomCode}</span>
             </div>
             <ConnectionStatus state={connectionState} />
           </div>

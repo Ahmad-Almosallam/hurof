@@ -201,7 +201,6 @@ export function PlayerBuzzerPage() {
           winnerTeam={gameOver.winnerTeam}
           team1Color={session.team1Color}
           team2Color={session.team2Color}
-          onDone={() => { sessionStorage.removeItem('hurof_player'); navigate('/'); }}
         />
       )}
     </RtlWrapper>

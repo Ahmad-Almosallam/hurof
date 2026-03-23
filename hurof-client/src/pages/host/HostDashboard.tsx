@@ -413,8 +413,11 @@ export function HostDashboard() {
 
         {/* ── Part 2: Grid (~78%) ── */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          {/* Top strip — team 1 */}
-          <div className="host-strip" style={{ height: 48, backgroundColor: session.team1Color, flexShrink: 0 }} />
+          {/* Top strip — team 1 + room code */}
+          <div className="host-strip" style={{ height: 48, backgroundColor: session.team1Color, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: 700 }}>رمز الغرفة</span>
+            <span style={{ color: '#fff', fontSize: 20, fontWeight: 900, letterSpacing: '0.15em' }}>{session.roomCode}</span>
+          </div>
 
           {/* Grid area */}
           <div ref={setGridContainer} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', backgroundColor: '#0f172a' }}>
