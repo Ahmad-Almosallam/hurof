@@ -20,7 +20,8 @@
       "Bash(cmd /c \"taskkill /PID 473096 /F\" 2>&1)",
       "Bash(cmd /c \"tasklist | findstr Hurof\" 2>&1)",
       "Bash(powershell -Command \"Get-Process -Name 'Hurof.Api' -ErrorAction SilentlyContinue | Stop-Process -Force; Write-Output 'done'\")",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(grep -r \"Cache\\\\|HttpClient\\\\|HttpClientFactory\" D:/RiderProjects/Hurof/Hurof.Api --include=*.cs)"
     ]
   }
 }
