@@ -31,7 +31,6 @@ public class SessionsController(ISessionService sessionService) : ControllerBase
     }
 
     [HttpPost("{identifier}/reset")]
-    [Authorize]
     public async Task<IActionResult> Reset(string identifier)
     {
         var reset = await sessionService.ResetSessionAsync(identifier);
