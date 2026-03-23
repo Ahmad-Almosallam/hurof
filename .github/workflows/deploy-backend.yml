@@ -1,0 +1,109 @@
+name: Deploy Backend to SmarterASP
+
+on:
+  push:
+    branches:
+      - production
+    paths:
+      - 'Hurof.Api/**'
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Create Production appsettings
+        run: |
+          @"
+          {
+            "ConnectionStrings": {
+              "Default": "${{ secrets.DB_CONNECTION_STRING }}"
+            },
+            "Cors": {
+              "AllowedOrigins": [
+                "${{ secrets.FRONTEND_URL }}"
+              ]
+            },
+            "Jwt": {
+              "Secret": "${{ secrets.JWT_SECRET }}",
+              "Issuer": "hurof-api",
+              "Audience": "hurof-clients",
+              "ExpiryMinutes": "480"
+            },
+            "Host": {
+              "Password": "${{ secrets.HOST_PASSWORD }}"
+            },
+            "Logging": {
+              "LogLevel": {
+                "Default": "Warning"
+              }
+            }
+          }
+          "@ | Out-File -FilePath Hurof.Api/appsettings.Production.json -Encoding UTF8
+        shell: pwsh
+
+      - name: Restore dependencies
+        run: dotnet restore Hurof.Api/Hurof.Api.csproj
+
+      - name: Build
+        run: dotnet build Hurof.Api/Hurof.Api.csproj --configuration Release --no-restore
+
+      - name: Publish
+        run: dotnet publish Hurof.Api/Hurof.Api.csproj --configuration Release --output ./publish --no-build
+
+      - name: Create app_offline.htm
+        run: echo '<!DOCTYPE html><html><body><h1>Updating...</h1></body></html>' > ./app_offline.htm
+        shell: bash
+
+      - name: Stop App (upload app_offline.htm)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.SMARTERASP_FTP_SERVER }}
+          username: ${{ secrets.SMARTERASP_FTP_USERNAME }}
+          password: ${{ secrets.SMARTERASP_FTP_PASSWORD }}
+          local-dir: ./
+          server-dir: ${{ secrets.SMARTERASP_SERVER_DIR }}
+          exclude: |
+            **/*
+            !app_offline.htm
+
+      - name: Wait for app to stop
+        run: Start-Sleep -Seconds 5
+        shell: pwsh
+
+      - name: Deploy application files
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.SMARTERASP_FTP_SERVER }}
+          username: ${{ secrets.SMARTERASP_FTP_USERNAME }}
+          password: ${{ secrets.SMARTERASP_FTP_PASSWORD }}
+          local-dir: ./publish/
+          server-dir: ${{ secrets.SMARTERASP_SERVER_DIR }}
+          exclude: |
+            **/app_offline.htm
+
+      - name: Start App (remove app_offline.htm)
+        run: |
+          $ftpUrl = "ftp://${{ secrets.SMARTERASP_FTP_SERVER }}/${{ secrets.SMARTERASP_SERVER_DIR }}/app_offline.htm"
+          $credentials = New-Object System.Net.NetworkCredential("${{ secrets.SMARTERASP_FTP_USERNAME }}", "${{ secrets.SMARTERASP_FTP_PASSWORD }}")
+          $request = [System.Net.FtpWebRequest]::Create($ftpUrl)
+          $request.Method = [System.Net.WebRequestMethods+Ftp]::DeleteFile
+          $request.Credentials = $credentials
+          try {
+            $response = $request.GetResponse()
+            Write-Host "app_offline.htm deleted - App started"
+            $response.Close()
+          } catch {
+            Write-Host "Could not delete app_offline.htm: $_"
+          }
+        shell: pwsh
