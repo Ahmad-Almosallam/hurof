@@ -115,9 +115,15 @@ export function PlayerBuzzerPage() {
     return (
       <RtlWrapper>
         <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-          <div className="text-center">
-            <div className="text-4xl mb-4">❌</div>
+          <div className="text-center flex flex-col gap-4">
+            <div className="text-4xl mb-2">❌</div>
             <p className="text-slate-400">الجلسة غير موجودة</p>
+            <button
+              onClick={() => navigate('/')}
+              className="px-6 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-bold transition-colors"
+            >
+              ← رجوع للرئيسية
+            </button>
           </div>
         </div>
       </RtlWrapper>

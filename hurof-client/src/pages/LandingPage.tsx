@@ -34,8 +34,10 @@ export function LandingPage() {
           <div className="flex flex-col gap-3">
             <input
               type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={sessionId}
-              onChange={e => setSessionId(e.target.value)}
+              onChange={e => setSessionId(e.target.value.replace(/\D/g, ''))}
               placeholder="أدخل رمز الجلسة"
               className="w-full px-4 py-3 rounded-xl bg-slate-800 text-white placeholder-slate-500 border border-slate-700 focus:border-amber-400 focus:outline-none text-center"
             />
@@ -45,6 +47,13 @@ export function LandingPage() {
               className="w-full py-3 rounded-2xl bg-slate-700 hover:bg-slate-600 text-white font-bold text-lg transition-colors disabled:opacity-40"
             >
               انضم للعبة
+            </button>
+            <button
+              onClick={() => sessionId.trim() && navigate(`/tv/${sessionId.trim()}`)}
+              disabled={!sessionId.trim()}
+              className="w-full py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-lg transition-colors disabled:opacity-40 border border-slate-600"
+            >
+              شاشة العرض
             </button>
           </div>
         </div>

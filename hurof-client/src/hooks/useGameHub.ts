@@ -42,7 +42,8 @@ export function useGameHub(sessionId: string, callbacks: GameHubCallbacks): { co
     conn.on('PlayerListUpdate', (players: string[]) => callbacksRef.current.onPlayerListUpdate?.(players));
 
     conn.onreconnecting(() => setConnectionState('Reconnecting'));
-    conn.onreconnected(() => {
+    conn.onreconnected(async () => {
+      await conn.invoke('JoinSession', sessionId);
       setConnectionState('Connected');
       callbacksRef.current.onReconnected?.();
     });
