@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import * as signalR from '@microsoft/signalr';
 import { getHubConnection } from '../lib/signalr';
-import type { BuzzWinnerEvent, GameOverEvent, GameResetEvent, LetterCellResponse } from '../types/api';
+import type { BuzzWinnerEvent, GameOverEvent, GameResetEvent, LetterCellResponse, TimerStartedEvent } from '../types/api';
 
 export type ConnectionState = 'Connected' | 'Reconnecting' | 'Disconnected';
 
@@ -12,6 +12,7 @@ interface GameHubCallbacks {
   onBuzzerReset?: () => void;
   onGameReset?: (event: GameResetEvent) => void;
   onPlayerListUpdate?: (players: string[]) => void;
+  onTimerStarted?: (event: TimerStartedEvent) => void;
   onReconnected?: () => void;
 }
 
@@ -40,6 +41,7 @@ export function useGameHub(sessionId: string, callbacks: GameHubCallbacks): { co
     conn.on('BuzzerReset', () => callbacksRef.current.onBuzzerReset?.());
     conn.on('GameReset', (e: GameResetEvent) => callbacksRef.current.onGameReset?.(e));
     conn.on('PlayerListUpdate', (players: string[]) => callbacksRef.current.onPlayerListUpdate?.(players));
+    conn.on('TimerStarted', (e: TimerStartedEvent) => callbacksRef.current.onTimerStarted?.(e));
 
     conn.onreconnecting(() => setConnectionState('Reconnecting'));
     conn.onreconnected(async () => {
@@ -58,6 +60,7 @@ export function useGameHub(sessionId: string, callbacks: GameHubCallbacks): { co
       conn.off('BuzzerReset');
       conn.off('GameReset');
       conn.off('PlayerListUpdate');
+      conn.off('TimerStarted');
     };
   }, [sessionId]);
 

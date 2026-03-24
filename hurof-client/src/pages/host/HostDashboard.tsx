@@ -7,6 +7,7 @@ import { QuestionCard } from '../../components/ui/QuestionCard';
 import { SplashScreen } from '../../components/ui/SplashScreen';
 import { GameOverBanner } from '../../components/ui/GameOverBanner';
 import { EndGameDialog } from '../../components/ui/EndGameDialog';
+import { TimerExpiredDialog } from '../../components/ui/TimerExpiredDialog';
 import { ConnectionStatus } from '../../components/ui/ConnectionStatus';
 import { useGameHub } from '../../hooks/useGameHub';
 import { useGridScale } from '../../hooks/useGridScale';
@@ -15,12 +16,14 @@ import { createSession, deleteSession, resetSession, getSession } from '../../ap
 import { setCellState, getQuestion, nextQuestion } from '../../api/letters';
 import { resetBuzzer } from '../../api/buzzer';
 import { getHubConnection } from '../../lib/signalr';
+import { playTimerEnd } from '../../lib/buzzerSound';
 import type {
   BuzzWinnerEvent,
   GameOverEvent,
   GameResetEvent,
   LetterCellResponse,
   SessionResponse,
+  TimerStartedEvent,
 } from '../../types/api';
 
 function extractApiError(error: unknown): string {
@@ -55,9 +58,58 @@ export function HostDashboard() {
   const [rejoinError, setRejoinError] = useState('');
   const hasJoinedAsHostRef = useRef(false);
 
+  // Timer state
+  const [timerBuzzer, setTimerBuzzer] = useState(0);
+  const [timerThink, setTimerThink] = useState(0);
+  const [timerSecondsLeft, setTimerSecondsLeft] = useState(0);
+  const [timerPhase, setTimerPhase] = useState<1 | 2 | null>(null);
+  const [showTimerExpired, setShowTimerExpired] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Stable refs so setInterval callbacks don't capture stale state
+  const timerPhaseRef = useRef<1 | 2 | null>(null);
+  const timerBuzzerRef = useRef(0);
+  const timerThinkRef = useRef(0);
+  const sessionRoomCodeRef = useRef('');
+  timerBuzzerRef.current = timerBuzzer;
+  timerThinkRef.current = timerThink;
+  sessionRoomCodeRef.current = session?.roomCode ?? '';
+
   const activeCellId = cells.find(c => c.state === 'Active')?.id ?? null;
   const [gridContainer, setGridContainer] = useState<HTMLDivElement | null>(null);
   const gridScale = useGridScale(gridContainer, session?.gridSize ?? 5);
+
+  const clearTimer = useCallback(() => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setTimerSecondsLeft(0);
+    setTimerPhase(null);
+    timerPhaseRef.current = null;
+    setShowTimerExpired(false);
+  }, []);
+
+  const startTimer = useCallback((durationSeconds: number, phase: 1 | 2) => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    timerPhaseRef.current = phase;
+    setTimerPhase(phase);
+    setTimerSecondsLeft(durationSeconds);
+    setShowTimerExpired(false);
+
+    let remaining = durationSeconds;
+    timerRef.current = setInterval(() => {
+      remaining -= 1;
+      setTimerSecondsLeft(remaining);
+      if (remaining <= 0) {
+        clearInterval(timerRef.current!);
+        timerRef.current = null;
+        setTimerSecondsLeft(0);
+        playTimerEnd();
+        if (timerPhaseRef.current === 1) {
+          setShowTimerExpired(true);
+        }
+        setTimerPhase(null);
+        timerPhaseRef.current = null;
+      }
+    }, 1000);
+  }, []);
 
   // Warn before leaving (but do NOT delete session — it persists for rejoin)
   useEffect(() => {
@@ -102,15 +154,31 @@ export function HostDashboard() {
     onGridUpdate: useCallback((cell: LetterCellResponse) => {
       setCells(prev => prev.map(c => c.id === cell.id ? cell : c));
     }, []),
-    onBuzzWinner: useCallback((e: BuzzWinnerEvent) => setBuzzWinner(e), []),
+    onBuzzWinner: useCallback((e: BuzzWinnerEvent) => {
+      setBuzzWinner(e);
+      const t1 = timerBuzzerRef.current;
+      const roomCode = sessionRoomCodeRef.current;
+      if (t1 > 0 && roomCode) {
+        startTimer(t1, 1);
+        getHubConnection(roomCode)
+          .invoke('BroadcastTimerStart', roomCode, t1, 1)
+          .catch(() => {});
+      }
+    }, [startTimer]),
     onGameOver: useCallback((e: GameOverEvent) => setGameOver(e), []),
-    onBuzzerReset: useCallback(() => setBuzzWinner(null), []),
+    onBuzzerReset: useCallback(() => {
+      setBuzzWinner(null);
+      clearTimer();
+    }, [clearTimer]),
     onGameReset: useCallback((e: GameResetEvent) => {
       setCells(e.cells);
       setGameOver(null);
       setBuzzWinner(null);
+      clearTimer();
       queryClient.invalidateQueries({ queryKey: queryKeys.question(session?.roomCode ?? '', '') });
-    }, [queryClient, session?.roomCode]),
+    }, [queryClient, session?.roomCode, clearTimer]),
+    // TimerStarted is handled by host locally (hub sends to OthersInGroup only)
+    onTimerStarted: useCallback((_e: TimerStartedEvent) => {}, []),
     onPlayerListUpdate: useCallback((list: string[]) => setPlayers(list), []),
     onReconnected: useCallback(async () => {
       if (!session?.roomCode) return;
@@ -212,6 +280,23 @@ export function HostDashboard() {
   };
 
   const handleResetBuzzer = () => {
+    resetMutation.mutate();
+  };
+
+  const handleTimerStartPhase2 = () => {
+    setShowTimerExpired(false);
+    const t2 = timerThinkRef.current;
+    if (t2 > 0 && session) {
+      startTimer(t2, 2);
+      getHubConnection(session.roomCode)
+        .invoke('BroadcastTimerStart', session.roomCode, t2, 2)
+        .catch(() => {});
+    }
+  };
+
+  const handleTimerResetBuzzer = () => {
+    setShowTimerExpired(false);
+    clearTimer();
     resetMutation.mutate();
   };
 
@@ -377,6 +462,14 @@ export function HostDashboard() {
                 <div className="flex flex-col gap-2 bg-amber-500/10 border border-amber-500 rounded-2xl p-4">
                   <div className="text-amber-400 text-xs font-bold uppercase tracking-wide">ضغط أول!</div>
                   <div className="text-white font-black text-xl">{buzzWinner.playerName}</div>
+                  {timerPhase !== null && timerSecondsLeft > 0 && (
+                    <div
+                      className="text-center font-black text-3xl"
+                      style={{ color: timerSecondsLeft <= 5 ? '#ef4444' : '#f59e0b' }}
+                    >
+                      {timerSecondsLeft} ث
+                    </div>
+                  )}
                   <button
                     onClick={handleResetBuzzer}
                     className="w-full py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-bold transition-colors"
@@ -444,6 +537,32 @@ export function HostDashboard() {
 
           {/* Connection status */}
           <ConnectionStatus state={connectionState} />
+
+          {/* Timer settings */}
+          <div className="flex gap-2">
+            <div className="flex-1 flex flex-col gap-1">
+              <label className="text-slate-500 text-xs text-center">وقت الطارئ (ث)</label>
+              <input
+                type="number"
+                min={0}
+                value={timerBuzzer || ''}
+                onChange={e => setTimerBuzzer(Math.max(0, Number(e.target.value) || 0))}
+                placeholder="0"
+                className="w-full px-2 py-2 rounded-xl bg-slate-700 text-white text-center text-sm border border-slate-600 focus:border-amber-400 focus:outline-none"
+              />
+            </div>
+            <div className="flex-1 flex flex-col gap-1">
+              <label className="text-slate-500 text-xs text-center">وقت الفريق (ث)</label>
+              <input
+                type="number"
+                min={0}
+                value={timerThink || ''}
+                onChange={e => setTimerThink(Math.max(0, Number(e.target.value) || 0))}
+                placeholder="0"
+                className="w-full px-2 py-2 rounded-xl bg-slate-700 text-white text-center text-sm border border-slate-600 focus:border-amber-400 focus:outline-none"
+              />
+            </div>
+          </div>
 
           {/* Copy links */}
           <div className="flex flex-col gap-2">
@@ -517,6 +636,14 @@ export function HostDashboard() {
           onJoinAsPlayer={() => { setShowEndConfirm(false); handleJoinAsPlayer(); }}
           onEndGame={() => { setShowEndConfirm(false); handleEndGame(); }}
           isEndingGame={endMutation.isPending}
+        />
+      )}
+
+      {showTimerExpired && (
+        <TimerExpiredDialog
+          question={question ?? null}
+          onStartPhase2={handleTimerStartPhase2}
+          onResetBuzzer={handleTimerResetBuzzer}
         />
       )}
     </RtlWrapper>

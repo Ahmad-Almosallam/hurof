@@ -40,6 +40,33 @@ export async function playWinSound() {
   });
 }
 
+export async function playTimerEnd() {
+  const audioCtx = getContext();
+  if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+  // Three short descending beeps — urgent alert
+  const beeps: { freq: number; start: number }[] = [
+    { freq: 880, start: 0.0 },
+    { freq: 660, start: 0.18 },
+    { freq: 440, start: 0.36 },
+  ];
+
+  beeps.forEach(({ freq, start }) => {
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    osc.type = 'square';
+    const t = audioCtx.currentTime + start;
+    osc.frequency.setValueAtTime(freq, t);
+    gainNode.gain.setValueAtTime(0, t);
+    gainNode.gain.linearRampToValueAtTime(0.4, t + 0.005);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+    osc.start(t);
+    osc.stop(t + 0.14);
+  });
+}
+
 export async function playBuzzer() {
   const audioCtx = getContext();
 
