@@ -11,7 +11,7 @@ import { ConnectionStatus } from '../../components/ui/ConnectionStatus';
 import { useGameHub } from '../../hooks/useGameHub';
 import { useGridScale } from '../../hooks/useGridScale';
 import { queryKeys } from '../../lib/queryKeys';
-import { createSession, deleteSession, resetSession } from '../../api/sessions';
+import { createSession, deleteSession, resetSession, getSession } from '../../api/sessions';
 import { setCellState, getQuestion, nextQuestion } from '../../api/letters';
 import { resetBuzzer } from '../../api/buzzer';
 import type {
@@ -98,9 +98,16 @@ export function HostDashboard() {
       queryClient.invalidateQueries({ queryKey: queryKeys.question(session?.roomCode ?? '', '') });
     }, [queryClient, session?.roomCode]),
     onPlayerListUpdate: useCallback((list: string[]) => setPlayers(list), []),
-    onReconnected: useCallback(() => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.session(session?.roomCode ?? '') });
-    }, [queryClient, session?.roomCode]),
+    onReconnected: useCallback(async () => {
+      if (!session?.roomCode) return;
+      const fresh = await getSession(session.roomCode);
+      setCells(fresh.cells);
+      if (fresh.buzzerLockedByPlayer) {
+        setBuzzWinner({ playerName: fresh.buzzerLockedByPlayer, lockedAt: fresh.buzzerLockedAt ?? '' });
+      } else {
+        setBuzzWinner(null);
+      }
+    }, [session?.roomCode]),
   });
 
   // Mutations
