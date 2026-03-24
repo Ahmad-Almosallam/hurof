@@ -104,10 +104,18 @@ export function PlayerBuzzerPage() {
   const handleChangeName = () => {
     sessionStorage.removeItem('hurof_player');
     setNameSubmitted(false);
+    if (sessionId) {
+      const conn = getHubConnection(sessionId);
+      conn.invoke('LeaveAsPlayer', sessionId).catch(() => {});
+    }
   };
 
   const handleExit = () => {
     sessionStorage.removeItem('hurof_player');
+    if (sessionId) {
+      const conn = getHubConnection(sessionId);
+      conn.invoke('LeaveAsPlayer', sessionId).catch(() => {});
+    }
     navigate('/');
   };
 
