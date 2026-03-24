@@ -63,3 +63,8 @@ export interface BuzzWinnerEvent {
   playerName: string;
   lockedAt: string;
 }
+
+export interface TimerStartedEvent {
+  durationSeconds: number;
+  phase: 1 | 2;
+}

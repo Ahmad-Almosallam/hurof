@@ -1,18 +1,19 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { RtlWrapper } from '../../components/layout/RtlWrapper';
 import { HexGrid } from '../../components/hex/HexGrid';
 import { BuzzBanner } from '../../components/ui/BuzzBanner';
 import { GameOverBanner } from '../../components/ui/GameOverBanner';
+import { TimerOverlay } from '../../components/ui/TimerOverlay';
 import { TeamScoreBadge } from '../../components/ui/TeamScoreBadge';
 import { ConnectionStatus } from '../../components/ui/ConnectionStatus';
 import { useGameHub } from '../../hooks/useGameHub';
 import { useGridScale } from '../../hooks/useGridScale';
 import { queryKeys } from '../../lib/queryKeys';
 import { getSession } from '../../api/sessions';
-import { playBuzzer, unlockAudio } from '../../lib/buzzerSound';
-import type { BuzzWinnerEvent, GameOverEvent, GameResetEvent, LetterCellResponse } from '../../types/api';
+import { playBuzzer, playTimerEnd, unlockAudio } from '../../lib/buzzerSound';
+import type { BuzzWinnerEvent, GameOverEvent, GameResetEvent, LetterCellResponse, TimerStartedEvent } from '../../types/api';
 
 export function TvDisplayPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -22,6 +23,17 @@ export function TvDisplayPage() {
   const [buzzWinner, setBuzzWinner] = useState<BuzzWinnerEvent | null>(null);
   const [gameOver, setGameOver] = useState<GameOverEvent | null>(null);
   const [gridContainer, setGridContainer] = useState<HTMLDivElement | null>(null);
+
+  const [timerSecondsLeft, setTimerSecondsLeft] = useState(0);
+  const [timerPhase, setTimerPhase] = useState<1 | 2 | null>(null);
+  const [timerTotal, setTimerTotal] = useState(0);
+  const tvTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const clearTvTimer = useCallback(() => {
+    if (tvTimerRef.current) { clearInterval(tvTimerRef.current); tvTimerRef.current = null; }
+    setTimerSecondsLeft(0);
+    setTimerPhase(null);
+  }, []);
 
   const { data: session, refetch } = useQuery({
     queryKey: queryKeys.session(sessionId!),
@@ -53,11 +65,33 @@ export function TvDisplayPage() {
     }, []),
     onBuzzWinner: useCallback((e: BuzzWinnerEvent) => { playBuzzer(); setBuzzWinner(e); }, []),
     onGameOver: useCallback((e: GameOverEvent) => setGameOver(e), []),
-    onBuzzerReset: useCallback(() => setBuzzWinner(null), []),
+    onBuzzerReset: useCallback(() => {
+      setBuzzWinner(null);
+      clearTvTimer();
+    }, [clearTvTimer]),
     onGameReset: useCallback((e: GameResetEvent) => {
       setCells(e.cells);
       setGameOver(null);
       setBuzzWinner(null);
+      clearTvTimer();
+    }, [clearTvTimer]),
+    onTimerStarted: useCallback((e: TimerStartedEvent) => {
+      if (tvTimerRef.current) { clearInterval(tvTimerRef.current); tvTimerRef.current = null; }
+      setTimerSecondsLeft(e.durationSeconds);
+      setTimerTotal(e.durationSeconds);
+      setTimerPhase(e.phase);
+      let remaining = e.durationSeconds;
+      tvTimerRef.current = setInterval(() => {
+        remaining -= 1;
+        setTimerSecondsLeft(remaining);
+        if (remaining <= 0) {
+          clearInterval(tvTimerRef.current!);
+          tvTimerRef.current = null;
+          setTimerSecondsLeft(0);
+          setTimerPhase(null);
+          playTimerEnd();
+        }
+      }, 1000);
     }, []),
     onReconnected: useCallback(() => {
       queryClient.invalidateQueries({ queryKey: queryKeys.session(sessionId!) });
@@ -123,6 +157,9 @@ export function TvDisplayPage() {
       </div>
 
       {buzzWinner && <BuzzBanner playerName={buzzWinner.playerName} />}
+      {timerSecondsLeft > 0 && timerPhase !== null && (
+        <TimerOverlay secondsLeft={timerSecondsLeft} totalSeconds={timerTotal} phase={timerPhase} />
+      )}
       {gameOver && (
         <GameOverBanner
           winnerTeam={gameOver.winnerTeam}
