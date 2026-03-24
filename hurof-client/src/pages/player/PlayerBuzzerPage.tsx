@@ -8,7 +8,7 @@ import { useGameHub } from '../../hooks/useGameHub';
 import { queryKeys } from '../../lib/queryKeys';
 import { getSession } from '../../api/sessions';
 import { buzz } from '../../api/buzzer';
-import { getHubConnection } from '../../lib/signalr';
+import { getHubConnection, stopHubConnection } from '../../lib/signalr';
 import type { BuzzWinnerEvent, GameOverEvent, GameResetEvent } from '../../types/api';
 
 export function PlayerBuzzerPage() {
@@ -35,6 +35,14 @@ export function PlayerBuzzerPage() {
       setActiveCellId(active?.id ?? null);
     }
   }, [session]);
+
+  // Stop the connection on unmount so the server detects the disconnect and updates player list
+  useEffect(() => {
+    return () => {
+      if (sessionId) stopHubConnection(sessionId).catch(() => {});
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // After name is submitted, invoke JoinAsPlayer so the host can see us
   useEffect(() => {
