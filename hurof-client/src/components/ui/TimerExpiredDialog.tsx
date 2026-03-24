@@ -37,7 +37,7 @@ export function TimerExpiredDialog({ question, onStartPhase2, onResetBuzzer }: P
             onClick={onResetBuzzer}
             className="w-full py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold transition-colors"
           >
-            إعادة الطارئ
+            إعادة ضبط الجرس
           </button>
         </div>
       </div>
