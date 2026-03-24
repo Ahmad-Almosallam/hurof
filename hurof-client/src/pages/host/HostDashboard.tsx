@@ -56,6 +56,7 @@ export function HostDashboard() {
   const [sidebarTab, setSidebarTab] = useState<'game' | 'players'>('game');
   const [config, setConfig] = useState<SessionConfig>({ gridSize: 5, team1Color: '#0013a3', team2Color: '#0099ff' });
   const [rejoinError, setRejoinError] = useState('');
+  const [hostTakenError, setHostTakenError] = useState('');
   const hasJoinedAsHostRef = useRef(false);
 
   // Timer state
@@ -201,7 +202,11 @@ export function HostDashboard() {
     const conn = getHubConnection(session.roomCode);
     conn.invoke<boolean>('JoinAsHost', session.roomCode).then(ok => {
       if (!ok) {
-        navigate('/');
+        setHostTakenError('هذه الغرفة لديها مضيف بالفعل');
+        hasJoinedAsHostRef.current = false;
+        setTimeout(() => navigate('/'), 3000);
+      } else {
+        conn.invoke('RequestPlayerList', session.roomCode).catch(() => {});
       }
     }).catch(() => {});
   }, [session?.roomCode, connectionState, navigate]);
@@ -325,6 +330,19 @@ export function HostDashboard() {
         team2Color={session.team2Color}
         onDone={() => setSplash(false)}
       />
+    );
+  }
+
+  // --- Host slot taken error ---
+  if (hostTakenError) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+        <div className="text-center flex flex-col gap-4">
+          <div className="text-4xl">🚫</div>
+          <p className="text-red-400 font-bold text-lg">{hostTakenError}</p>
+          <p className="text-slate-500 text-sm">سيتم توجيهك للصفحة الرئيسية...</p>
+        </div>
+      </div>
     );
   }
 
@@ -474,7 +492,7 @@ export function HostDashboard() {
                     onClick={handleResetBuzzer}
                     className="w-full py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-bold transition-colors"
                   >
-                    إعادة الطارئ
+                    إعادة ضبط الجرس
                   </button>
                 </div>
               )}

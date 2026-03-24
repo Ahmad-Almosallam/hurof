@@ -23,6 +23,12 @@ public class GameHub(IPlayerTrackerService playerTracker, IHostTrackerService ho
         return Task.FromResult(hostTracker.TryRegister(Context.ConnectionId, roomCode));
     }
 
+    public async Task RequestPlayerList(string roomCode)
+    {
+        var players = playerTracker.GetPlayers(roomCode);
+        await Clients.Caller.SendAsync("PlayerListUpdate", players);
+    }
+
     public Task LeaveAsHost(string roomCode)
     {
         hostTracker.Unregister(Context.ConnectionId);

@@ -156,8 +156,14 @@ export function TvDisplayPage() {
         </div>
       </div>
 
-      {buzzWinner && <BuzzBanner playerName={buzzWinner.playerName} />}
-      {timerSecondsLeft > 0 && timerPhase !== null && (
+      {buzzWinner && (
+        <BuzzBanner
+          playerName={buzzWinner.playerName}
+          timerSecondsLeft={timerSecondsLeft > 0 ? timerSecondsLeft : undefined}
+          timerPhase={timerPhase}
+        />
+      )}
+      {!buzzWinner && timerSecondsLeft > 0 && timerPhase !== null && (
         <TimerOverlay secondsLeft={timerSecondsLeft} totalSeconds={timerTotal} phase={timerPhase} />
       )}
       {gameOver && (
