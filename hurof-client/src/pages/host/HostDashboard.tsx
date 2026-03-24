@@ -1,12 +1,12 @@
-import { useState, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RtlWrapper } from '../../components/layout/RtlWrapper';
 import { HexGrid } from '../../components/hex/HexGrid';
 import { QuestionCard } from '../../components/ui/QuestionCard';
 import { SplashScreen } from '../../components/ui/SplashScreen';
 import { GameOverBanner } from '../../components/ui/GameOverBanner';
-import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { EndGameDialog } from '../../components/ui/EndGameDialog';
 import { ConnectionStatus } from '../../components/ui/ConnectionStatus';
 import { useGameHub } from '../../hooks/useGameHub';
 import { useGridScale } from '../../hooks/useGridScale';
@@ -14,6 +14,7 @@ import { queryKeys } from '../../lib/queryKeys';
 import { createSession, deleteSession, resetSession, getSession } from '../../api/sessions';
 import { setCellState, getQuestion, nextQuestion } from '../../api/letters';
 import { resetBuzzer } from '../../api/buzzer';
+import { getHubConnection } from '../../lib/signalr';
 import type {
   BuzzWinnerEvent,
   GameOverEvent,
@@ -40,6 +41,8 @@ interface SessionConfig {
 export function HostDashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const rejoinRoomCode = searchParams.get('roomCode');
 
   const [splash, setSplash] = useState(false);
   const [session, setSession] = useState<SessionResponse | null>(null);
@@ -49,30 +52,41 @@ export function HostDashboard() {
   const [players, setPlayers] = useState<string[]>([]);
   const [sidebarTab, setSidebarTab] = useState<'game' | 'players'>('game');
   const [config, setConfig] = useState<SessionConfig>({ gridSize: 5, team1Color: '#0013a3', team2Color: '#0099ff' });
+  const [rejoinError, setRejoinError] = useState('');
+  const hasJoinedAsHostRef = useRef(false);
 
   const activeCellId = cells.find(c => c.state === 'Active')?.id ?? null;
   const [gridContainer, setGridContainer] = useState<HTMLDivElement | null>(null);
   const gridScale = useGridScale(gridContainer, session?.gridSize ?? 5);
 
+  // Warn before leaving (but do NOT delete session — it persists for rejoin)
   useEffect(() => {
     if (!session) return;
     const warn = (e: BeforeUnloadEvent) => {
       e.preventDefault();
       e.returnValue = '';
     };
-    const deleteOnLeave = () => {
-      fetch(`${import.meta.env.VITE_API_BASE ?? 'http://localhost:5000'}/api/sessions/${session.id}`, {
-        method: 'DELETE',
-        keepalive: true,
-      });
-    };
     window.addEventListener('beforeunload', warn);
-    window.addEventListener('pagehide', deleteOnLeave);
-    return () => {
-      window.removeEventListener('beforeunload', warn);
-      window.removeEventListener('pagehide', deleteOnLeave);
-    };
+    return () => window.removeEventListener('beforeunload', warn);
   }, [session]);
+
+  // Rejoin existing session if ?roomCode param is present
+  useEffect(() => {
+    if (!rejoinRoomCode) return;
+    getSession(rejoinRoomCode)
+      .then(data => {
+        setSession(data);
+        setCells(data.cells);
+        if (data.buzzerLockedByPlayer) {
+          setBuzzWinner({ playerName: data.buzzerLockedByPlayer, lockedAt: data.buzzerLockedAt ?? '' });
+        }
+      })
+      .catch(() => {
+        localStorage.removeItem('hurof_host_room');
+        setRejoinError('انتهت الجلسة أو غير موجودة');
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Question query — only runs when there's an active cell
   const { data: question, error: questionError, isFetching: questionLoading } = useQuery({
@@ -107,13 +121,28 @@ export function HostDashboard() {
       } else {
         setBuzzWinner(null);
       }
+      // Re-claim host slot after reconnect
+      hasJoinedAsHostRef.current = false;
     }, [session?.roomCode]),
   });
+
+  // Claim host slot once connected (and after reconnects)
+  useEffect(() => {
+    if (!session?.roomCode || connectionState !== 'Connected' || hasJoinedAsHostRef.current) return;
+    hasJoinedAsHostRef.current = true;
+    const conn = getHubConnection(session.roomCode);
+    conn.invoke<boolean>('JoinAsHost', session.roomCode).then(ok => {
+      if (!ok) {
+        navigate('/');
+      }
+    }).catch(() => {});
+  }, [session?.roomCode, connectionState, navigate]);
 
   // Mutations
   const createMutation = useMutation({
     mutationFn: () => createSession(config),
     onSuccess: (data) => {
+      localStorage.setItem('hurof_host_room', data.roomCode);
       setSession(data);
       setCells(data.cells);
       setSplash(true);
@@ -145,9 +174,23 @@ export function HostDashboard() {
     mutationFn: () => deleteSession(session!.id),
     onSuccess: () => {
       sessionStorage.removeItem('hurof_token');
+      localStorage.removeItem('hurof_host_room');
       navigate('/', { replace: true });
     },
   });
+
+  const handleEndGame = () => {
+    if (!session) return;
+    getHubConnection(session.roomCode).invoke('LeaveAsHost', session.roomCode).catch(() => {});
+    endMutation.mutate();
+  };
+
+  const handleJoinAsPlayer = () => {
+    if (!session) return;
+    getHubConnection(session.roomCode).invoke('LeaveAsHost', session.roomCode).catch(() => {});
+    localStorage.removeItem('hurof_host_room');
+    navigate(`/play/${session.roomCode}`);
+  };
 
   const newRoundMutation = useMutation({
     mutationFn: () => resetSession(session!.roomCode),
@@ -200,6 +243,15 @@ export function HostDashboard() {
     );
   }
 
+  // --- Rejoin loading state ---
+  if (rejoinRoomCode && !session && !rejoinError) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-slate-400">جارٍ تحميل الجلسة...</div>
+      </div>
+    );
+  }
+
   // --- Create session form ---
   if (!session) {
     return (
@@ -221,6 +273,9 @@ export function HostDashboard() {
           </button>
           <div className="w-full max-w-sm flex flex-col gap-5">
             <h1 className="text-3xl font-black text-amber-400 text-center">إعداد اللعبة</h1>
+            {rejoinError && (
+              <p className="text-red-400 text-sm text-center bg-red-900/30 border border-red-700 rounded-xl px-4 py-2">{rejoinError}</p>
+            )}
 
             <div className="flex flex-col gap-2">
               <label className="text-slate-400 text-sm">حجم الشبكة</label>
@@ -457,13 +512,11 @@ export function HostDashboard() {
       )}
 
       {showEndConfirm && (
-        <ConfirmDialog
-          message="هل أنت متأكد من إنهاء اللعبة؟ سيتم حذف الجلسة نهائياً."
-          confirmLabel="إنهاء"
-          cancelLabel="إلغاء"
-          danger
-          onConfirm={() => { setShowEndConfirm(false); endMutation.mutate(); }}
+        <EndGameDialog
           onCancel={() => setShowEndConfirm(false)}
+          onJoinAsPlayer={() => { setShowEndConfirm(false); handleJoinAsPlayer(); }}
+          onEndGame={() => { setShowEndConfirm(false); handleEndGame(); }}
+          isEndingGame={endMutation.isPending}
         />
       )}
     </RtlWrapper>

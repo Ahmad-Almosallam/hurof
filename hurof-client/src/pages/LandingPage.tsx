@@ -1,10 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RtlWrapper } from '../components/layout/RtlWrapper';
 
 export function LandingPage() {
   const navigate = useNavigate();
   const [sessionId, setSessionId] = useState('');
+  const [savedHostRoom, setSavedHostRoom] = useState<string | null>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('hurof_host_room');
+    if (saved) setSavedHostRoom(saved);
+  }, []);
 
   return (
     <RtlWrapper>
@@ -14,6 +20,18 @@ export function LandingPage() {
             <h1 className="text-5xl font-black text-amber-400 mb-2">حروف</h1>
             <p className="text-slate-400">لعبة الحروف العربية التفاعلية</p>
           </div>
+
+          {savedHostRoom && (
+            <div className="flex flex-col gap-2 bg-amber-500/10 border border-amber-500/40 rounded-2xl p-4">
+              <p className="text-amber-400 text-sm font-bold text-center">لديك غرفة نشطة — {savedHostRoom}</p>
+              <button
+                onClick={() => navigate(`/host/dashboard?roomCode=${savedHostRoom}`)}
+                className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-900 font-black text-base transition-colors"
+              >
+                استأنف كمضيف
+              </button>
+            </div>
+          )}
 
           <button
             onClick={() => navigate('/host')}
@@ -54,6 +72,13 @@ export function LandingPage() {
               className="w-full py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-lg transition-colors disabled:opacity-40 border border-slate-600"
             >
               شاشة العرض
+            </button>
+            <button
+              onClick={() => sessionId.trim() && navigate(`/host/dashboard?roomCode=${sessionId.trim()}`)}
+              disabled={!sessionId.trim()}
+              className="w-full py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-400 font-bold text-base transition-colors disabled:opacity-40 border border-slate-600"
+            >
+              انضم كمضيف
             </button>
           </div>
         </div>
