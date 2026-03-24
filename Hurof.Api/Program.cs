@@ -77,6 +77,7 @@ builder.Services.AddScoped<IWinDetectionService, WinDetectionService>();
 builder.Services.AddScoped<IGridGeneratorService, GridGeneratorService>();
 builder.Services.AddSingleton<IJwtService, JwtService>();
 builder.Services.AddSingleton<IPlayerTrackerService, PlayerTrackerService>();
+builder.Services.AddSingleton<IHostTrackerService, HostTrackerService>();
 
 var app = builder.Build();
 

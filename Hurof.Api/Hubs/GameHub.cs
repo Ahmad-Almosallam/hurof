@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Hurof.Api.Hubs;
 
-public class GameHub(IPlayerTrackerService playerTracker) : Hub
+public class GameHub(IPlayerTrackerService playerTracker, IHostTrackerService hostTracker) : Hub
 {
     public async Task JoinSession(string roomCode)
     {
@@ -18,6 +18,17 @@ public class GameHub(IPlayerTrackerService playerTracker) : Hub
         await Clients.Group(roomCode).SendAsync("PlayerListUpdate", players);
     }
 
+    public Task<bool> JoinAsHost(string roomCode)
+    {
+        return Task.FromResult(hostTracker.TryRegister(Context.ConnectionId, roomCode));
+    }
+
+    public Task LeaveAsHost(string roomCode)
+    {
+        hostTracker.Unregister(Context.ConnectionId);
+        return Task.CompletedTask;
+    }
+
     public async Task LeaveSession(string roomCode)
     {
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomCode);
@@ -25,6 +36,8 @@ public class GameHub(IPlayerTrackerService playerTracker) : Hub
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
+        hostTracker.Unregister(Context.ConnectionId);
+
         var info = playerTracker.Unregister(Context.ConnectionId);
         if (info is not null)
         {

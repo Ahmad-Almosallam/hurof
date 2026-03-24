@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { RtlWrapper } from '../../components/layout/RtlWrapper';
 import { HexGrid } from '../../components/hex/HexGrid';
@@ -16,6 +16,7 @@ import type { BuzzWinnerEvent, GameOverEvent, GameResetEvent, LetterCellResponse
 
 export function TvDisplayPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [cells, setCells] = useState<LetterCellResponse[]>([]);
   const [buzzWinner, setBuzzWinner] = useState<BuzzWinnerEvent | null>(null);
@@ -84,7 +85,15 @@ export function TvDisplayPage() {
       <div className="game-board-root" style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', backgroundColor: '#0f172a' }}>
         {/* Score bar */}
         <div className="flex items-center justify-between px-4 py-1.5 bg-slate-800 flex-shrink-0">
-          <TeamScoreBadge label="فريق ١" score={team1Score} color={session.team1Color} />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/')}
+              className="text-slate-400 hover:text-white text-sm font-bold px-2 py-1 rounded-lg hover:bg-slate-700 transition-colors"
+            >
+              ← رجوع
+            </button>
+            <TeamScoreBadge label="فريق ١" score={team1Score} color={session.team1Color} />
+          </div>
           <div className="flex items-center gap-3">
             <span className="text-base font-black text-amber-400">حروف</span>
             <div className="flex items-center gap-1.5 bg-slate-700 px-2.5 py-1 rounded-lg border border-slate-600">
