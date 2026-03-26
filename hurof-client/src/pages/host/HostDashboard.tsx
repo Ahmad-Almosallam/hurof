@@ -61,8 +61,8 @@ export function HostDashboard() {
   const hasJoinedAsHostRef = useRef(false);
 
   // Timer state
-  const [timerBuzzer, setTimerBuzzer] = useState(0);
-  const [timerThink, setTimerThink] = useState(0);
+  const [timerBuzzer, setTimerBuzzer] = useState(3);
+  const [timerThink, setTimerThink] = useState(10);
   const [timerSecondsLeft, setTimerSecondsLeft] = useState(0);
   const [timerPhase, setTimerPhase] = useState<1 | 2 | null>(null);
   const [showTimerExpired, setShowTimerExpired] = useState(false);
@@ -317,7 +317,6 @@ export function HostDashboard() {
   // Mobile layout
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
   const [showMobileSettings, setShowMobileSettings] = useState(false);
-  const [showMobileQuestion, setShowMobileQuestion] = useState(false);
 
   const team1Score = cells.filter(c => c.state === 'AssignedTeam1').length;
   const team2Score = cells.filter(c => c.state === 'AssignedTeam2').length;
@@ -336,17 +335,7 @@ export function HostDashboard() {
     return () => mq.removeEventListener('change', handler);
   }, []);
 
-  // Auto-open question sheet on mobile when a cell becomes active
-  const prevActiveCellRef = useRef<string | null>(null);
-  useEffect(() => {
-    if (isMobile && activeCellId && activeCellId !== prevActiveCellRef.current) {
-      setShowMobileQuestion(true);
-    }
-    if (!activeCellId) setShowMobileQuestion(false);
-    prevActiveCellRef.current = activeCellId;
-  }, [activeCellId, isMobile]);
-
-  // --- Splash ---
+// --- Splash ---
   if (splash && session) {
     return (
       <SplashScreen
@@ -485,6 +474,32 @@ export function HostDashboard() {
             <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700 }}>رمز الغرفة</span>
             <span style={{ color: '#fff', fontSize: 14, fontWeight: 900, letterSpacing: '0.15em' }}>{session.roomCode}</span>
           </div>
+
+          {/* Inline question — shown above grid when a cell is active */}
+          {activeCellId && (
+            <div style={{ flexShrink: 0, padding: '0.5rem 0.75rem', borderBottom: '1px solid #334155', backgroundColor: '#1e293b' }}>
+              {questionLoading ? (
+                <div className="flex justify-center py-3">
+                  <div className="w-5 h-5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : (questionError || nextQMutation.error) ? (
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 text-red-300 text-xs">{extractApiError(questionError ?? nextQMutation.error)}</div>
+                  <button onClick={() => nextQMutation.mutate()} disabled={nextQMutation.isPending} className="px-3 py-1.5 rounded-xl bg-slate-700 text-slate-300 text-xs disabled:opacity-50">سؤال آخر</button>
+                </div>
+              ) : question ? (
+                <QuestionCard
+                  question={question}
+                  onNextQuestion={() => nextQMutation.mutate()}
+                  onAssignTeam1={() => handleAssign(1)}
+                  onAssignTeam2={() => handleAssign(2)}
+                  team1Color={session.team1Color}
+                  team2Color={session.team2Color}
+                  isLoading={nextQMutation.isPending}
+                />
+              ) : null}
+            </div>
+          )}
 
           {/* Grid */}
           <div ref={setGridContainer} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
@@ -777,51 +792,6 @@ export function HostDashboard() {
         />
       )}
 
-      {isMobile && showMobileQuestion && activeCellId && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm"
-          onClick={() => setShowMobileQuestion(false)}
-        >
-          <div
-            className="bg-slate-800 rounded-t-2xl p-4 w-full max-w-lg"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-slate-400 text-sm font-bold">السؤال</span>
-              <button
-                onClick={() => setShowMobileQuestion(false)}
-                className="text-slate-500 hover:text-white text-lg w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-700 transition-colors"
-              >✕</button>
-            </div>
-            {questionLoading ? (
-              <div className="flex justify-center py-6">
-                <div className="w-6 h-6 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-              </div>
-            ) : (questionError || nextQMutation.error) ? (
-              <div className="flex flex-col gap-3 pb-2">
-                <div className="bg-red-900/50 border border-red-600 rounded-xl p-3 text-red-300 text-sm text-center">
-                  {extractApiError(questionError ?? nextQMutation.error)}
-                </div>
-                <button
-                  onClick={() => nextQMutation.mutate()}
-                  disabled={nextQMutation.isPending}
-                  className="w-full py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm transition-colors disabled:opacity-50"
-                >سؤال آخر</button>
-              </div>
-            ) : question ? (
-              <QuestionCard
-                question={question}
-                onNextQuestion={() => nextQMutation.mutate()}
-                onAssignTeam1={() => { handleAssign(1); setShowMobileQuestion(false); }}
-                onAssignTeam2={() => { handleAssign(2); setShowMobileQuestion(false); }}
-                team1Color={session.team1Color}
-                team2Color={session.team2Color}
-                isLoading={nextQMutation.isPending}
-              />
-            ) : null}
-          </div>
-        </div>
-      )}
     </RtlWrapper>
   );
 }
