@@ -477,15 +477,15 @@ export function HostDashboard() {
 
           {/* Inline question — shown above grid when a cell is active */}
           {activeCellId && (
-            <div style={{ flexShrink: 0, padding: '0.5rem 0.75rem', borderBottom: '1px solid #334155', backgroundColor: '#1e293b' }}>
+            <div style={{ flexShrink: 0, padding: '0.375rem 0.5rem', borderBottom: '1px solid #334155', backgroundColor: '#1e293b' }}>
               {questionLoading ? (
-                <div className="flex justify-center py-3">
-                  <div className="w-5 h-5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                <div className="flex justify-center py-2">
+                  <div className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : (questionError || nextQMutation.error) ? (
                 <div className="flex items-center gap-2">
                   <div className="flex-1 text-red-300 text-xs">{extractApiError(questionError ?? nextQMutation.error)}</div>
-                  <button onClick={() => nextQMutation.mutate()} disabled={nextQMutation.isPending} className="px-3 py-1.5 rounded-xl bg-slate-700 text-slate-300 text-xs disabled:opacity-50">سؤال آخر</button>
+                  <button onClick={() => nextQMutation.mutate()} disabled={nextQMutation.isPending} className="px-2 py-1 rounded-lg bg-slate-700 text-slate-300 text-xs disabled:opacity-50">سؤال آخر</button>
                 </div>
               ) : question ? (
                 <QuestionCard
@@ -496,6 +496,7 @@ export function HostDashboard() {
                   team1Color={session.team1Color}
                   team2Color={session.team2Color}
                   isLoading={nextQMutation.isPending}
+                  compact
                 />
               ) : null}
             </div>
