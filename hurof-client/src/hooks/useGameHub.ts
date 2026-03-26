@@ -31,6 +31,13 @@ export function useGameHub(sessionId: string, callbacks: GameHubCallbacks): { co
       if (conn.state === signalR.HubConnectionState.Disconnected) {
         await conn.start();
       }
+      // If still connecting (e.g. React Strict Mode double-invoke), wait for Connected
+      let waited = 0;
+      while (conn.state === signalR.HubConnectionState.Connecting && waited < 2000) {
+        await new Promise(r => setTimeout(r, 50));
+        waited += 50;
+      }
+      if (conn.state !== signalR.HubConnectionState.Connected) return;
       await conn.invoke('JoinSession', sessionId);
       setConnectionState('Connected');
     };

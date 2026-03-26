@@ -9,6 +9,7 @@ import { GameOverBanner } from '../../components/ui/GameOverBanner';
 import { EndGameDialog } from '../../components/ui/EndGameDialog';
 import { TimerExpiredDialog } from '../../components/ui/TimerExpiredDialog';
 import { ConnectionStatus } from '../../components/ui/ConnectionStatus';
+import { MobileSettingsSheet } from '../../components/ui/MobileSettingsSheet';
 import { useGameHub } from '../../hooks/useGameHub';
 import { useGridScale } from '../../hooks/useGridScale';
 import { queryKeys } from '../../lib/queryKeys';
@@ -60,8 +61,8 @@ export function HostDashboard() {
   const hasJoinedAsHostRef = useRef(false);
 
   // Timer state
-  const [timerBuzzer, setTimerBuzzer] = useState(0);
-  const [timerThink, setTimerThink] = useState(0);
+  const [timerBuzzer, setTimerBuzzer] = useState(3);
+  const [timerThink, setTimerThink] = useState(10);
   const [timerSecondsLeft, setTimerSecondsLeft] = useState(0);
   const [timerPhase, setTimerPhase] = useState<1 | 2 | null>(null);
   const [showTimerExpired, setShowTimerExpired] = useState(false);
@@ -313,6 +314,10 @@ export function HostDashboard() {
   const [copiedPlayer, setCopiedPlayer] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
 
+  // Mobile layout
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  const [showMobileSettings, setShowMobileSettings] = useState(false);
+
   const team1Score = cells.filter(c => c.state === 'AssignedTeam1').length;
   const team2Score = cells.filter(c => c.state === 'AssignedTeam2').length;
 
@@ -322,7 +327,15 @@ export function HostDashboard() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // --- Splash ---
+  // Mobile breakpoint listener
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+// --- Splash ---
   if (splash && session) {
     return (
       <SplashScreen
@@ -359,14 +372,6 @@ export function HostDashboard() {
   if (!session) {
     return (
       <RtlWrapper>
-        <div className="portrait-overlay">
-          <div className="portrait-overlay__icon">📱</div>
-          <div className="portrait-overlay__text">
-            يرجى تدوير الجهاز إلى الوضع الأفقي
-            <br />
-            <span style={{ fontSize: '0.9rem', color: '#94a3b8', fontWeight: 400 }}>Please rotate your device to landscape</span>
-          </div>
-        </div>
         <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
           <button
             onClick={() => navigate('/')}
@@ -430,15 +435,120 @@ export function HostDashboard() {
   // --- Main dashboard ---
   return (
     <RtlWrapper>
-      <div className="portrait-overlay">
-        <div className="portrait-overlay__icon">📱</div>
-        <div className="portrait-overlay__text">
-          يرجى تدوير الجهاز إلى الوضع الأفقي
-          <br />
-          <span style={{ fontSize: '0.9rem', color: '#94a3b8', fontWeight: 400 }}>Please rotate your device to landscape</span>
+      {isMobile ? (
+        /* ══════════════════════════════════
+           MOBILE LAYOUT
+           ══════════════════════════════════ */
+        <div className="game-board-root" style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', backgroundColor: '#0f172a' }}>
+
+          {/* Mobile top bar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 0.6rem', backgroundColor: '#1e293b', borderBottom: '1px solid #334155', flexShrink: 0 }}>
+            <button
+              onClick={() => setShowMobileSettings(true)}
+              className="p-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-lg transition-colors"
+              aria-label="الإعدادات"
+            >⚙️</button>
+            <button
+              onClick={() => copyToClipboard(`/tv/${session.roomCode}`, setCopiedTv)}
+              className="flex-1 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-bold transition-colors"
+              style={{ color: copiedTv ? '#4ade80' : '#f59e0b' }}
+            >{copiedTv ? '✓ شاشة' : '📺 شاشة'}</button>
+            <button
+              onClick={() => copyToClipboard(`/play/${session.roomCode}`, setCopiedPlayer)}
+              className="flex-1 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-bold transition-colors"
+              style={{ color: copiedPlayer ? '#4ade80' : '#f59e0b' }}
+            >{copiedPlayer ? '✓ لاعبون' : '👤 لاعبون'}</button>
+            <div className="flex items-center gap-1 px-2 py-1.5 rounded-xl bg-slate-700">
+              <span className="text-slate-400 text-xs">👥</span>
+              <span className="text-white font-black text-sm">{players.length}</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl bg-slate-700">
+              <span className="font-black text-sm" style={{ color: session.team1Color }}>{team1Score}</span>
+              <span className="text-slate-600 text-xs">|</span>
+              <span className="font-black text-sm" style={{ color: session.team2Color }}>{team2Score}</span>
+            </div>
+          </div>
+
+          {/* Room code strip */}
+          <div style={{ height: 28, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#0f172a', borderBottom: '1px solid #1e293b' }}>
+            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700 }}>رمز الغرفة</span>
+            <span style={{ color: '#fff', fontSize: 14, fontWeight: 900, letterSpacing: '0.15em' }}>{session.roomCode}</span>
+          </div>
+
+          {/* Inline question — shown above grid when a cell is active */}
+          {activeCellId && (
+            <div style={{ flexShrink: 0, padding: '0.5rem 0.75rem', borderBottom: '1px solid #334155', backgroundColor: '#1e293b' }}>
+              {questionLoading ? (
+                <div className="flex justify-center py-3">
+                  <div className="w-5 h-5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : (questionError || nextQMutation.error) ? (
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 text-red-300 text-xs">{extractApiError(questionError ?? nextQMutation.error)}</div>
+                  <button onClick={() => nextQMutation.mutate()} disabled={nextQMutation.isPending} className="px-3 py-1.5 rounded-xl bg-slate-700 text-slate-300 text-xs disabled:opacity-50">سؤال آخر</button>
+                </div>
+              ) : question ? (
+                <QuestionCard
+                  question={question}
+                  onNextQuestion={() => nextQMutation.mutate()}
+                  onAssignTeam1={() => handleAssign(1)}
+                  onAssignTeam2={() => handleAssign(2)}
+                  team1Color={session.team1Color}
+                  team2Color={session.team2Color}
+                  isLoading={nextQMutation.isPending}
+                />
+              ) : null}
+            </div>
+          )}
+
+          {/* Grid */}
+          <div ref={setGridContainer} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            <HexGrid
+              cells={cells}
+              gridSize={session.gridSize}
+              team1Color={session.team1Color}
+              team2Color={session.team2Color}
+              winningPath={winningPath}
+              onCellClick={handleCellClick}
+              interactive={!gameOver}
+              scale={gridScale}
+            />
+          </div>
+
+          {/* Buzz winner bar */}
+          {buzzWinner && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', backgroundColor: '#451a03', borderTop: '1px solid #f59e0b', flexShrink: 0 }}>
+              <span className="text-amber-400 font-black text-sm flex-1">🔔 {buzzWinner.playerName}</span>
+              {timerPhase !== null && timerSecondsLeft > 0 && (
+                <span className="font-black text-base" style={{ color: timerSecondsLeft <= 5 ? '#ef4444' : '#f59e0b' }}>
+                  {timerSecondsLeft}ث
+                </span>
+              )}
+              <button
+                onClick={handleResetBuzzer}
+                className="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs font-bold transition-colors"
+              >
+                إعادة ضبط
+              </button>
+            </div>
+          )}
+
+          {/* Bottom bar */}
+          <div style={{ padding: '0.5rem 0.75rem', backgroundColor: '#1e293b', borderTop: '1px solid #334155', flexShrink: 0 }}>
+            <button
+              onClick={() => setShowEndConfirm(true)}
+              disabled={endMutation.isPending}
+              className="w-full py-2.5 rounded-xl bg-red-900/50 hover:bg-red-800 text-red-400 text-sm font-bold transition-colors disabled:opacity-50"
+            >
+              إنهاء اللعبة
+            </button>
+          </div>
         </div>
-      </div>
-      <div className="game-board-root" style={{ height: '100vh', display: 'flex', overflow: 'hidden', backgroundColor: '#0f172a' }}>
+      ) : (
+        /* ══════════════════════════════════
+           DESKTOP LAYOUT
+           ══════════════════════════════════ */
+        <div className="game-board-root" style={{ height: '100vh', display: 'flex', overflow: 'hidden', backgroundColor: '#0f172a' }}>
 
         {/* ── Part 1: Sidebar (~22%) ── */}
         <div style={{ width: '22%' }} className="host-sidebar flex flex-col gap-3 p-4 bg-slate-800 border-l border-slate-700 overflow-y-auto">
@@ -636,6 +746,7 @@ export function HostDashboard() {
           <div className="host-strip" style={{ height: 48, backgroundColor: session.team2Color, flexShrink: 0 }} />
         </div>
       </div>
+      )}
 
       {/* Overlays */}
       {gameOver && (
@@ -664,6 +775,23 @@ export function HostDashboard() {
           onResetBuzzer={handleTimerResetBuzzer}
         />
       )}
+
+      {/* Mobile modals */}
+      {isMobile && showMobileSettings && (
+        <MobileSettingsSheet
+          onClose={() => setShowMobileSettings(false)}
+          timerBuzzer={timerBuzzer}
+          timerThink={timerThink}
+          setTimerBuzzer={setTimerBuzzer}
+          setTimerThink={setTimerThink}
+          players={players}
+          copiedTv={copiedTv}
+          copiedPlayer={copiedPlayer}
+          onCopyTv={() => copyToClipboard(`/tv/${session.roomCode}`, setCopiedTv)}
+          onCopyPlayer={() => copyToClipboard(`/play/${session.roomCode}`, setCopiedPlayer)}
+        />
+      )}
+
     </RtlWrapper>
   );
 }

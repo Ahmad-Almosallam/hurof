@@ -8,6 +8,7 @@ import { useGameHub } from '../../hooks/useGameHub';
 import { queryKeys } from '../../lib/queryKeys';
 import { getSession } from '../../api/sessions';
 import { buzz } from '../../api/buzzer';
+import * as signalR from '@microsoft/signalr';
 import { getHubConnection, stopHubConnection } from '../../lib/signalr';
 import type { BuzzWinnerEvent, GameOverEvent, GameResetEvent } from '../../types/api';
 
@@ -36,10 +37,15 @@ export function PlayerBuzzerPage() {
     }
   }, [session]);
 
-  // Stop the connection on unmount so the server detects the disconnect and updates player list
+  // Stop the connection on unmount (only when actually Connected, to avoid killing it mid-negotiation in React Strict Mode)
   useEffect(() => {
     return () => {
-      if (sessionId) stopHubConnection(sessionId).catch(() => {});
+      if (sessionId) {
+        const conn = getHubConnection(sessionId);
+        if (conn.state === signalR.HubConnectionState.Connected) {
+          stopHubConnection(sessionId).catch(() => {});
+        }
+      }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -21,7 +21,19 @@
       "Bash(cmd /c \"tasklist | findstr Hurof\" 2>&1)",
       "Bash(powershell -Command \"Get-Process -Name 'Hurof.Api' -ErrorAction SilentlyContinue | Stop-Process -Force; Write-Output 'done'\")",
       "Bash(node:*)",
-      "Bash(grep -r \"Cache\\\\|HttpClient\\\\|HttpClientFactory\" D:/RiderProjects/Hurof/Hurof.Api --include=*.cs)"
+      "Bash(grep -r \"Cache\\\\|HttpClient\\\\|HttpClientFactory\" D:/RiderProjects/Hurof/Hurof.Api --include=*.cs)",
+      "Bash(grep -i \"\\\\.cs$\")",
+      "Bash(grep -r \"TV\\\\|tv\\\\|display\\\\|Display\" D:RiderProjectsHurofHurof.Api --include=*.cs)",
+      "Bash(grep -r \"host\\\\|Host\\\\|connection\" D:RiderProjectsHurofHurof.Api --include=*.cs)",
+      "Bash(xargs wc:*)",
+      "Bash(grep -r \"Authorize\\\\|reconnect\\\\|Reconnect\\\\|disconnect\\\\|Disconnect\\\\|host.*connection\\\\|Host.*Connection\" D:RiderProjectsHurofHurof.Api --include=*.cs)",
+      "Bash(grep -r \"HostConnectionId\\\\|host.*id\\\\|connection.*track\" D:RiderProjectsHurofHurof.Api --include=*.cs -i)",
+      "Bash(npx tsc:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)"
     ]
   }
 }
