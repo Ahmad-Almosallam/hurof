@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RtlWrapper } from '../components/layout/RtlWrapper';
+import { InstallBanner } from '../components/ui/InstallBanner';
 
 export function LandingPage() {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ export function LandingPage() {
 
   return (
     <RtlWrapper>
+      <InstallBanner />
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
         <div className="w-full max-w-sm flex flex-col gap-6">
           <div className="text-center">
