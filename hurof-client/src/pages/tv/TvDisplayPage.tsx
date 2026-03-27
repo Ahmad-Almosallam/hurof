@@ -12,7 +12,6 @@ import { useGameHub } from '../../hooks/useGameHub';
 import { useGridScale } from '../../hooks/useGridScale';
 import { queryKeys } from '../../lib/queryKeys';
 import { getSession } from '../../api/sessions';
-import { playBuzzer, playTimerEnd, unlockAudio } from '../../lib/buzzerSound';
 import type { BuzzWinnerEvent, GameOverEvent, GameResetEvent, LetterCellResponse, TimerStartedEvent } from '../../types/api';
 
 export function TvDisplayPage() {
@@ -49,21 +48,12 @@ export function TvDisplayPage() {
     if (session) setCells(session.cells);
   }, [session]);
 
-  useEffect(() => {
-    const unlock = () => unlockAudio();
-    window.addEventListener('click', unlock, { once: true });
-    window.addEventListener('keydown', unlock, { once: true });
-    return () => {
-      window.removeEventListener('click', unlock);
-      window.removeEventListener('keydown', unlock);
-    };
-  }, []);
 
   const { connectionState } = useGameHub(sessionId ?? '', {
     onGridUpdate: useCallback((cell: LetterCellResponse) => {
       setCells(prev => prev.map(c => c.id === cell.id ? cell : c));
     }, []),
-    onBuzzWinner: useCallback((e: BuzzWinnerEvent) => { playBuzzer(); setBuzzWinner(e); }, []),
+    onBuzzWinner: useCallback((e: BuzzWinnerEvent) => { setBuzzWinner(e); }, []),
     onGameOver: useCallback((e: GameOverEvent) => setGameOver(e), []),
     onBuzzerReset: useCallback(() => {
       setBuzzWinner(null);
@@ -89,7 +79,6 @@ export function TvDisplayPage() {
           tvTimerRef.current = null;
           setTimerSecondsLeft(0);
           setTimerPhase(null);
-          playTimerEnd();
         }
       }, 1000);
     }, []),

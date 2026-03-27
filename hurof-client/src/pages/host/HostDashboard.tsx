@@ -17,7 +17,7 @@ import { createSession, deleteSession, resetSession, getSession } from '../../ap
 import { setCellState, getQuestion, nextQuestion } from '../../api/letters';
 import { resetBuzzer } from '../../api/buzzer';
 import { getHubConnection } from '../../lib/signalr';
-import { playTimerEnd } from '../../lib/buzzerSound';
+import { playTimerEnd, playBuzzer, playWinSound, unlockAudio } from '../../lib/buzzerSound';
 import type {
   BuzzWinnerEvent,
   GameOverEvent,
@@ -142,6 +142,17 @@ export function HostDashboard() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Unlock audio context on first user interaction
+  useEffect(() => {
+    const unlock = () => unlockAudio();
+    window.addEventListener('click', unlock, { once: true });
+    window.addEventListener('keydown', unlock, { once: true });
+    return () => {
+      window.removeEventListener('click', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+  }, []);
+
   // Question query — only runs when there's an active cell
   const { data: question, error: questionError, isFetching: questionLoading } = useQuery({
     queryKey: queryKeys.question(session?.roomCode ?? '', activeCellId ?? ''),
@@ -157,6 +168,7 @@ export function HostDashboard() {
       setCells(prev => prev.map(c => c.id === cell.id ? cell : c));
     }, []),
     onBuzzWinner: useCallback((e: BuzzWinnerEvent) => {
+      playBuzzer();
       setBuzzWinner(e);
       const t1 = timerBuzzerRef.current;
       const roomCode = sessionRoomCodeRef.current;
@@ -167,7 +179,7 @@ export function HostDashboard() {
           .catch(() => {});
       }
     }, [startTimer]),
-    onGameOver: useCallback((e: GameOverEvent) => setGameOver(e), []),
+    onGameOver: useCallback((e: GameOverEvent) => { playWinSound().catch(() => {}); setGameOver(e); }, []),
     onBuzzerReset: useCallback(() => {
       setBuzzWinner(null);
       clearTimer();

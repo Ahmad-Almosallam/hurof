@@ -1,5 +1,4 @@
 import { useEffect, useMemo } from 'react';
-import { playWinSound } from '../../lib/buzzerSound';
 
 interface GameOverBannerProps {
   winnerTeam: number | null;
@@ -51,10 +50,6 @@ function Confetti({ winnerColor }: { winnerColor: string }) {
 export function GameOverBanner({ winnerTeam, team1Color, team2Color, onDone, onBack, onNewRound }: GameOverBannerProps) {
   const winnerColor = winnerTeam === 1 ? team1Color : winnerTeam === 2 ? team2Color : '#6b7280';
   const winnerLabel = winnerTeam === 1 ? 'فريق ١' : winnerTeam === 2 ? 'فريق ٢' : null;
-
-  useEffect(() => {
-    if (winnerLabel) playWinSound().catch(() => {});
-  }, [winnerLabel]);
 
   useEffect(() => {
     if (!onDone) return;
