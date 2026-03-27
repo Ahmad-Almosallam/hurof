@@ -27,6 +27,7 @@ export function TvDisplayPage() {
   const [timerPhase, setTimerPhase] = useState<1 | 2 | null>(null);
   const [timerTotal, setTimerTotal] = useState(0);
   const tvTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [sessionEndedCountdown, setSessionEndedCountdown] = useState<number | null>(null);
 
   const clearTvTimer = useCallback(() => {
     if (tvTimerRef.current) { clearInterval(tvTimerRef.current); tvTimerRef.current = null; }
@@ -86,7 +87,17 @@ export function TvDisplayPage() {
       queryClient.invalidateQueries({ queryKey: queryKeys.session(sessionId!) });
       refetch();
     }, [queryClient, sessionId, refetch]),
+    onSessionEnded: useCallback(() => {
+      setSessionEndedCountdown(5);
+    }, []),
   });
+
+  useEffect(() => {
+    if (sessionEndedCountdown === null) return;
+    if (sessionEndedCountdown <= 0) { navigate('/'); return; }
+    const t = setTimeout(() => setSessionEndedCountdown(c => (c ?? 1) - 1), 1000);
+    return () => clearTimeout(t);
+  }, [sessionEndedCountdown, navigate]);
 
   const winningPath = gameOver?.winningPath
     ? new Set(gameOver.winningPath.map(p => `${p.row}-${p.col}`))
@@ -161,6 +172,12 @@ export function TvDisplayPage() {
           team1Color={session.team1Color}
           team2Color={session.team2Color}
         />
+      )}
+      {sessionEndedCountdown !== null && (
+        <div className="fixed inset-0 bg-black/80 flex flex-col items-center justify-center z-50 gap-4">
+          <div className="text-5xl font-black text-white">انتهت الجلسة</div>
+          <div className="text-slate-400 text-xl">العودة للرئيسية خلال {sessionEndedCountdown} ثوانٍ...</div>
+        </div>
       )}
     </RtlWrapper>
   );

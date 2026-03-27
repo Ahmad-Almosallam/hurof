@@ -7,6 +7,7 @@ interface Props {
   setTimerBuzzer: (v: number) => void;
   setTimerThink: (v: number) => void;
   players: string[];
+  onKickPlayer: (name: string) => void;
   copiedTv: boolean;
   copiedPlayer: boolean;
   onCopyTv: () => void;
@@ -16,7 +17,7 @@ interface Props {
 export function MobileSettingsSheet({
   onClose,
   timerBuzzer, timerThink, setTimerBuzzer, setTimerThink,
-  players,
+  players, onKickPlayer,
   copiedTv, copiedPlayer, onCopyTv, onCopyPlayer,
 }: Props) {
   const [tab, setTab] = useState<'settings' | 'players'>('settings');
@@ -105,7 +106,14 @@ export function MobileSettingsSheet({
               players.map((name, i) => (
                 <div key={i} className="flex items-center gap-3 bg-slate-700/50 rounded-xl px-4 py-2.5">
                   <div className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
-                  <span className="text-white font-bold text-sm">{name}</span>
+                  <span className="text-white font-bold text-sm flex-1">{name}</span>
+                  <button
+                    onClick={() => onKickPlayer(name)}
+                    className="text-slate-500 hover:text-red-400 text-base leading-none transition-colors flex-shrink-0"
+                    aria-label="إزالة اللاعب"
+                  >
+                    ✕
+                  </button>
                 </div>
               ))
             )}

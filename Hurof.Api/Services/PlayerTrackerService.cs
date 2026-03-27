@@ -7,6 +7,7 @@ public interface IPlayerTrackerService
     void Register(string connectionId, string roomCode, string playerName);
     (string RoomCode, string PlayerName)? Unregister(string connectionId);
     IReadOnlyList<string> GetPlayers(string roomCode);
+    string? FindConnectionId(string roomCode, string playerName);
 }
 
 public class PlayerTrackerService : IPlayerTrackerService
@@ -29,5 +30,12 @@ public class PlayerTrackerService : IPlayerTrackerService
             .Where(v => v.RoomCode == roomCode)
             .Select(v => v.PlayerName)
             .ToList();
+    }
+
+    public string? FindConnectionId(string roomCode, string playerName)
+    {
+        return _connections
+            .FirstOrDefault(kv => kv.Value.RoomCode == roomCode && kv.Value.PlayerName == playerName)
+            .Key;
     }
 }

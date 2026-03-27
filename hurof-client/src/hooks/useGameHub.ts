@@ -14,6 +14,8 @@ interface GameHubCallbacks {
   onPlayerListUpdate?: (players: string[]) => void;
   onTimerStarted?: (event: TimerStartedEvent) => void;
   onReconnected?: () => void;
+  onKicked?: () => void;
+  onSessionEnded?: () => void;
 }
 
 export function useGameHub(sessionId: string, callbacks: GameHubCallbacks): { connectionState: ConnectionState } {
@@ -49,6 +51,8 @@ export function useGameHub(sessionId: string, callbacks: GameHubCallbacks): { co
     conn.on('GameReset', (e: GameResetEvent) => callbacksRef.current.onGameReset?.(e));
     conn.on('PlayerListUpdate', (players: string[]) => callbacksRef.current.onPlayerListUpdate?.(players));
     conn.on('TimerStarted', (e: TimerStartedEvent) => callbacksRef.current.onTimerStarted?.(e));
+    conn.on('YouWereKicked', () => callbacksRef.current.onKicked?.());
+    conn.on('SessionEnded', () => callbacksRef.current.onSessionEnded?.());
 
     conn.onreconnecting(() => setConnectionState('Reconnecting'));
     conn.onreconnected(async () => {
@@ -68,6 +72,8 @@ export function useGameHub(sessionId: string, callbacks: GameHubCallbacks): { co
       conn.off('GameReset');
       conn.off('PlayerListUpdate');
       conn.off('TimerStarted');
+      conn.off('YouWereKicked');
+      conn.off('SessionEnded');
     };
   }, [sessionId]);
 

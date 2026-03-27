@@ -7,6 +7,7 @@ public interface IHostTrackerService
     bool TryRegister(string connectionId, string roomCode);
     string? Unregister(string connectionId);
     bool IsHosted(string roomCode);
+    bool IsHost(string connectionId, string roomCode);
 }
 
 public class HostTrackerService : IHostTrackerService
@@ -37,4 +38,7 @@ public class HostTrackerService : IHostTrackerService
     }
 
     public bool IsHosted(string roomCode) => _rooms.ContainsKey(roomCode);
+
+    public bool IsHost(string connectionId, string roomCode) =>
+        _rooms.TryGetValue(roomCode, out var hostId) && hostId == connectionId;
 }

@@ -91,6 +91,8 @@ export function PlayerBuzzerPage() {
         conn.invoke('JoinAsPlayer', sessionId, playerName).catch(() => {});
       }
     }, [queryClient, sessionId, refetch, playerName]),
+    onKicked: useCallback(() => navigate('/'), [navigate]),
+    onSessionEnded: useCallback(() => navigate('/'), [navigate]),
   });
 
   const buzzMutation = useMutation({

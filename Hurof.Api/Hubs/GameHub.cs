@@ -45,6 +45,17 @@ public class GameHub(IPlayerTrackerService playerTracker, IHostTrackerService ho
         }
     }
 
+    public async Task KickPlayer(string roomCode, string playerName)
+    {
+        if (!hostTracker.IsHost(Context.ConnectionId, roomCode)) return;
+        var connectionId = playerTracker.FindConnectionId(roomCode, playerName);
+        if (connectionId is null) return;
+        await Clients.Client(connectionId).SendAsync("YouWereKicked");
+        playerTracker.Unregister(connectionId);
+        var players = playerTracker.GetPlayers(roomCode);
+        await Clients.Group(roomCode).SendAsync("PlayerListUpdate", players);
+    }
+
     public async Task BroadcastTimerStart(string roomCode, int durationSeconds, int phase)
     {
         await Clients.OthersInGroup(roomCode).SendAsync("TimerStarted",

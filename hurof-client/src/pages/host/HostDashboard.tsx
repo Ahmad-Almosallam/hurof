@@ -333,6 +333,11 @@ export function HostDashboard() {
   const team1Score = cells.filter(c => c.state === 'AssignedTeam1').length;
   const team2Score = cells.filter(c => c.state === 'AssignedTeam2').length;
 
+  const kickPlayer = (playerName: string) => {
+    if (!session) return;
+    getHubConnection(session.roomCode).invoke('KickPlayer', session.roomCode, playerName).catch(() => {});
+  };
+
   const copyToClipboard = (path: string, setCopied: (v: boolean) => void) => {
     navigator.clipboard.writeText(`${window.location.origin}${path}`);
     setCopied(true);
@@ -669,7 +674,14 @@ export function HostDashboard() {
                 players.map((name, i) => (
                   <div key={i} className="flex items-center gap-3 bg-slate-700/50 rounded-xl px-4 py-2.5">
                     <div className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
-                    <span className="text-white font-bold text-sm">{name}</span>
+                    <span className="text-white font-bold text-sm flex-1">{name}</span>
+                    <button
+                      onClick={() => kickPlayer(name)}
+                      className="text-slate-500 hover:text-red-400 text-base leading-none transition-colors flex-shrink-0"
+                      aria-label="إزالة اللاعب"
+                    >
+                      ✕
+                    </button>
                   </div>
                 ))
               )}
@@ -798,6 +810,7 @@ export function HostDashboard() {
           setTimerBuzzer={setTimerBuzzer}
           setTimerThink={setTimerThink}
           players={players}
+          onKickPlayer={kickPlayer}
           copiedTv={copiedTv}
           copiedPlayer={copiedPlayer}
           onCopyTv={() => copyToClipboard(`/tv/${session.roomCode}`, setCopiedTv)}
