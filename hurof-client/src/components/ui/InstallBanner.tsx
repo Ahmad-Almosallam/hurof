@@ -20,7 +20,7 @@ export function InstallBanner() {
   // Android / Chrome — native install prompt available
   if (canInstall) {
     return (
-      <div className="fixed bottom-0 inset-x-0 z-40 flex items-center justify-between gap-3 px-4 py-3 bg-amber-500 shadow-2xl">
+      <div className="fixed bottom-0 inset-x-0 z-40 flex items-center justify-between gap-3 bg-amber-500 shadow-2xl" style={{ paddingTop: '0.75rem', paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))', paddingLeft: 'calc(1rem + env(safe-area-inset-left, 0px))', paddingRight: 'calc(1rem + env(safe-area-inset-right, 0px))' }}>
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <span className="text-2xl flex-shrink-0">📲</span>
           <span className="text-slate-900 font-bold text-sm leading-tight">
@@ -49,7 +49,7 @@ export function InstallBanner() {
   // iOS Safari — no native prompt, show manual instructions
   if (showIosHint) {
     return (
-      <div className="fixed bottom-0 inset-x-0 z-40 flex items-start justify-between gap-3 px-4 py-3 bg-slate-800 border-t border-slate-700 shadow-2xl">
+      <div className="fixed bottom-0 inset-x-0 z-40 flex items-start justify-between gap-3 bg-slate-800 border-t border-slate-700 shadow-2xl" style={{ paddingTop: '0.75rem', paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))', paddingLeft: 'calc(1rem + env(safe-area-inset-left, 0px))', paddingRight: 'calc(1rem + env(safe-area-inset-right, 0px))' }}>
         <div className="flex items-start gap-2 flex-1 min-w-0">
           <span className="text-2xl flex-shrink-0 mt-0.5">📲</span>
           <p className="text-slate-200 text-xs leading-relaxed">

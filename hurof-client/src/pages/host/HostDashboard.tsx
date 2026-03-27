@@ -442,7 +442,7 @@ export function HostDashboard() {
         <div className="game-board-root" style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', backgroundColor: '#0f172a' }}>
 
           {/* Mobile top bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 0.6rem', backgroundColor: '#1e293b', borderBottom: '1px solid #334155', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', paddingTop: 'calc(0.5rem + env(safe-area-inset-top, 0px))', paddingBottom: '0.5rem', paddingLeft: 'calc(0.6rem + env(safe-area-inset-left, 0px))', paddingRight: 'calc(0.6rem + env(safe-area-inset-right, 0px))', backgroundColor: '#1e293b', borderBottom: '1px solid #334155', flexShrink: 0 }}>
             <button
               onClick={() => setShowMobileSettings(true)}
               className="p-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-lg transition-colors"
@@ -535,7 +535,7 @@ export function HostDashboard() {
           )}
 
           {/* Bottom bar */}
-          <div style={{ padding: '0.5rem 0.75rem', backgroundColor: '#1e293b', borderTop: '1px solid #334155', flexShrink: 0 }}>
+          <div style={{ paddingTop: '0.5rem', paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom, 0px))', paddingLeft: 'calc(0.75rem + env(safe-area-inset-left, 0px))', paddingRight: 'calc(0.75rem + env(safe-area-inset-right, 0px))', backgroundColor: '#1e293b', borderTop: '1px solid #334155', flexShrink: 0 }}>
             <button
               onClick={() => setShowEndConfirm(true)}
               disabled={endMutation.isPending}
@@ -724,7 +724,7 @@ export function HostDashboard() {
         {/* ── Part 2: Grid (~78%) ── */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {/* Top strip — team 1 + room code */}
-          <div className="host-strip" style={{ height: 48, backgroundColor: session.team1Color, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <div className="host-strip" style={{ minHeight: 48, backgroundColor: session.team1Color, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, paddingTop: 'env(safe-area-inset-top, 0px)', paddingLeft: 'env(safe-area-inset-left, 0px)', paddingRight: 'env(safe-area-inset-right, 0px)' }}>
             <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: 700 }}>رمز الغرفة</span>
             <span style={{ color: '#fff', fontSize: 20, fontWeight: 900, letterSpacing: '0.15em' }}>{session.roomCode}</span>
           </div>

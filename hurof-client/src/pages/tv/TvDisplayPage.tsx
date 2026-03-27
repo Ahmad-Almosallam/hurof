@@ -118,7 +118,7 @@ export function TvDisplayPage() {
     <RtlWrapper>
       <div className="game-board-root" style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', backgroundColor: '#0f172a' }}>
         {/* Score bar */}
-        <div className="flex items-center justify-between px-4 py-1.5 bg-slate-800 flex-shrink-0">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, backgroundColor: '#1e293b', paddingTop: 'calc(0.375rem + env(safe-area-inset-top, 0px))', paddingBottom: '0.375rem', paddingLeft: 'calc(1rem + env(safe-area-inset-left, 0px))', paddingRight: 'calc(1rem + env(safe-area-inset-right, 0px))' }}>
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate('/')}

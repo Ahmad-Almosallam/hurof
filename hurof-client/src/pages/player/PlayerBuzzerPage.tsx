@@ -185,7 +185,7 @@ export function PlayerBuzzerPage() {
 
   return (
     <RtlWrapper>
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center gap-8 p-4">
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center gap-8" style={{ padding: 'calc(1rem + env(safe-area-inset-top, 0px)) calc(1rem + env(safe-area-inset-right, 0px)) calc(1rem + env(safe-area-inset-bottom, 0px)) calc(1rem + env(safe-area-inset-left, 0px))' }}>
         <div className="flex items-center gap-3">
           <span className="text-slate-300 text-lg font-bold">{playerName}</span>
           <button
