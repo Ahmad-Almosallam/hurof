@@ -60,6 +60,11 @@ export function PlayerBuzzerPage() {
   }, [nameSubmitted, sessionId, playerName]);
 
   const { connectionState } = useGameHub(sessionId ?? '', {
+    onConnected: useCallback(() => {
+      if (nameSubmitted && playerName && sessionId) {
+        getHubConnection(sessionId).invoke('JoinAsPlayer', sessionId, playerName).catch(() => {});
+      }
+    }, [nameSubmitted, playerName, sessionId]),
     onGridUpdate: useCallback((cell: { id: string; state: string }) => {
       if (cell.state === 'Active') setActiveCellId(cell.id);
       else setActiveCellId(prev => prev === cell.id ? null : prev);

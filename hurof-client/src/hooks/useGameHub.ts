@@ -13,6 +13,7 @@ interface GameHubCallbacks {
   onGameReset?: (event: GameResetEvent) => void;
   onPlayerListUpdate?: (players: string[]) => void;
   onTimerStarted?: (event: TimerStartedEvent) => void;
+  onConnected?: () => void;
   onReconnected?: () => void;
   onKicked?: () => void;
   onSessionEnded?: () => void;
@@ -42,6 +43,7 @@ export function useGameHub(sessionId: string, callbacks: GameHubCallbacks): { co
       if (conn.state !== signalR.HubConnectionState.Connected) return;
       await conn.invoke('JoinSession', sessionId);
       setConnectionState('Connected');
+      callbacksRef.current.onConnected?.();
     };
 
     conn.on('GridUpdate', (cell: LetterCellResponse) => callbacksRef.current.onGridUpdate?.(cell));
