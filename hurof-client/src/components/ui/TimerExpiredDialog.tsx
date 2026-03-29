@@ -4,9 +4,13 @@ interface Props {
   question: QuestionResponse | null;
   onStartPhase2: () => void;
   onResetBuzzer: () => void;
+  onAssignTeam1: () => void;
+  onAssignTeam2: () => void;
+  team1Color: string;
+  team2Color: string;
 }
 
-export function TimerExpiredDialog({ question, onStartPhase2, onResetBuzzer }: Props) {
+export function TimerExpiredDialog({ question, onStartPhase2, onResetBuzzer, onAssignTeam1, onAssignTeam2, team1Color, team2Color }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
       <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-sm mx-4 flex flex-col gap-4 shadow-2xl">
@@ -25,6 +29,23 @@ export function TimerExpiredDialog({ question, onStartPhase2, onResetBuzzer }: P
             </div>
           </div>
         )}
+
+        <div className="flex gap-3">
+          <button
+            onClick={onAssignTeam1}
+            className="flex-1 py-3 rounded-xl font-black text-white transition-opacity hover:opacity-90"
+            style={{ backgroundColor: team1Color }}
+          >
+            فريق ١
+          </button>
+          <button
+            onClick={onAssignTeam2}
+            className="flex-1 py-3 rounded-xl font-black text-white transition-opacity hover:opacity-90"
+            style={{ backgroundColor: team2Color }}
+          >
+            فريق ٢
+          </button>
+        </div>
 
         <div className="flex flex-col gap-3">
           <button

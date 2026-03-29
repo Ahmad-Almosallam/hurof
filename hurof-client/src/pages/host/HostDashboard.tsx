@@ -798,6 +798,10 @@ export function HostDashboard() {
           question={question ?? null}
           onStartPhase2={handleTimerStartPhase2}
           onResetBuzzer={handleTimerResetBuzzer}
+          onAssignTeam1={() => { handleAssign(1); setShowTimerExpired(false); }}
+          onAssignTeam2={() => { handleAssign(2); setShowTimerExpired(false); }}
+          team1Color={session.team1Color}
+          team2Color={session.team2Color}
         />
       )}
 
