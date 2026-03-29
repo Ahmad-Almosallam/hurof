@@ -13,7 +13,7 @@ public class GridGeneratorService : IGridGeneratorService
     [
         "أ", "ب", "ت", "ج", "ح", "خ", "د", "ر", "ز", "س",
         "ش", "ص", "ض", "ط", "ع", "غ", "ف", "ق", "ك", "ل",
-        "م", "ن", "ه", "و", "ي"
+        "م", "ن", "هـ", "و", "ي"
     ];
 
     public List<LetterCell> GenerateGrid(Guid sessionId, int gridSize)
