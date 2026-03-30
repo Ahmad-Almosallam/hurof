@@ -7,28 +7,41 @@ interface Props {
 
 export function EndGameDialog({ onCancel, onJoinAsPlayer, onEndGame, isEndingGame }: Props) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-sm mx-4 flex flex-col gap-4 shadow-2xl">
-        <p className="text-white text-center text-lg font-bold leading-relaxed">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
+      style={{ background: 'rgba(7,9,15,0.75)' }}
+    >
+      <div
+        className="w-full max-w-sm mx-4 flex flex-col gap-4 rounded-2xl p-6 shadow-2xl"
+        style={{ background: 'var(--surface)', border: '1px solid var(--border-gold)', animation: 'float-in-scale 0.3s ease both' }}
+      >
+        <p className="text-center text-lg font-bold leading-relaxed font-arabic" style={{ color: 'var(--cream)' }}>
           ماذا تريد أن تفعل؟
         </p>
         <div className="flex flex-col gap-3">
           <button
             onClick={onJoinAsPlayer}
-            className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold transition-colors"
+            className="w-full py-3 rounded-xl font-bold font-arabic transition-all hover:brightness-110"
+            style={{
+              background: 'linear-gradient(135deg, var(--gold-dim), var(--gold), var(--gold-2))',
+              color: '#07090F',
+              boxShadow: '0 3px 16px var(--gold-glow)',
+            }}
           >
             انضم كلاعب
           </button>
           <button
             onClick={onEndGame}
             disabled={isEndingGame}
-            className="w-full py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold transition-colors disabled:opacity-50"
+            className="w-full py-3 rounded-xl font-bold font-arabic transition-all hover:brightness-110 disabled:opacity-50"
+            style={{ background: 'rgba(239,68,68,0.12)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' }}
           >
             {isEndingGame ? 'جارٍ الإنهاء...' : 'إنهاء اللعبة'}
           </button>
           <button
             onClick={onCancel}
-            className="w-full py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold transition-colors"
+            className="w-full py-3 rounded-xl font-bold font-arabic transition-all hover:brightness-110"
+            style={{ background: 'var(--elevated)', color: 'var(--cream-2)', border: '1px solid var(--border-gold)' }}
           >
             إلغاء
           </button>

@@ -14,6 +14,12 @@ interface Props {
   onCopyPlayer: () => void;
 }
 
+const inputStyle = {
+  background: 'var(--elevated)',
+  color: 'var(--cream)',
+  border: '1px solid var(--border-gold)',
+};
+
 export function MobileSettingsSheet({
   onClose,
   timerBuzzer, timerThink, setTimerBuzzer, setTimerThink,
@@ -23,28 +29,45 @@ export function MobileSettingsSheet({
   const [tab, setTab] = useState<'settings' | 'players'>('settings');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5 w-full max-w-sm mx-4 flex flex-col gap-4 shadow-2xl" onClick={e => e.stopPropagation()}>
-
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
+      style={{ background: 'rgba(7,9,15,0.75)' }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-sm mx-4 flex flex-col gap-4 rounded-2xl p-5 shadow-2xl"
+        style={{ background: 'var(--surface)', border: '1px solid var(--border-gold)' }}
+        onClick={e => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between">
-          <span className="text-white font-black text-lg">الإعدادات</span>
-          <button onClick={onClose} className="text-slate-500 hover:text-white text-xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-700 transition-colors">
+          <span className="font-black text-lg font-arabic" style={{ color: 'var(--cream)' }}>الإعدادات</span>
+          <button
+            onClick={onClose}
+            className="text-xl w-8 h-8 flex items-center justify-center rounded-lg transition-all hover:brightness-125"
+            style={{ color: 'var(--cream-2)', background: 'var(--elevated)' }}
+          >
             ✕
           </button>
         </div>
 
         {/* Tab switcher */}
-        <div className="flex rounded-xl overflow-hidden border border-slate-700">
+        <div className="flex rounded-xl overflow-hidden" style={{ border: '1px solid var(--border-gold)' }}>
           <button
             onClick={() => setTab('settings')}
-            className={`flex-1 py-2 text-sm font-bold transition-colors ${tab === 'settings' ? 'bg-amber-500 text-slate-900' : 'bg-slate-700 text-slate-400 hover:text-white'}`}
+            className="flex-1 py-2 text-sm font-bold font-arabic transition-all"
+            style={tab === 'settings'
+              ? { background: 'linear-gradient(135deg, var(--gold-dim), var(--gold))', color: '#07090F' }
+              : { background: 'var(--elevated)', color: 'var(--cream-2)' }}
           >
             الإعدادات
           </button>
           <button
             onClick={() => setTab('players')}
-            className={`flex-1 py-2 text-sm font-bold transition-colors ${tab === 'players' ? 'bg-amber-500 text-slate-900' : 'bg-slate-700 text-slate-400 hover:text-white'}`}
+            className="flex-1 py-2 text-sm font-bold font-arabic transition-all"
+            style={tab === 'players'
+              ? { background: 'linear-gradient(135deg, var(--gold-dim), var(--gold))', color: '#07090F' }
+              : { background: 'var(--elevated)', color: 'var(--cream-2)' }}
           >
             اللاعبون {players.length > 0 && `(${players.length})`}
           </button>
@@ -52,64 +75,74 @@ export function MobileSettingsSheet({
 
         {tab === 'settings' ? (
           <div className="flex flex-col gap-4">
-            {/* Timer inputs */}
             <div className="flex gap-3">
               <div className="flex-1 flex flex-col gap-1">
-                <label className="text-slate-500 text-xs text-center">وقت الطارئ (ث)</label>
+                <label className="text-xs text-center font-arabic" style={{ color: 'var(--cream-2)' }}>وقت الطارئ (ث)</label>
                 <input
                   type="number"
                   min={0}
                   value={timerBuzzer || ''}
                   onChange={e => setTimerBuzzer(Math.max(0, Number(e.target.value) || 0))}
                   placeholder="0"
-                  className="w-full px-3 py-2.5 rounded-xl bg-slate-700 text-white text-center border border-slate-600 focus:border-amber-400 focus:outline-none"
+                  className="w-full px-3 py-2.5 rounded-xl text-center font-arabic outline-none transition-all"
+                  style={inputStyle}
                 />
               </div>
               <div className="flex-1 flex flex-col gap-1">
-                <label className="text-slate-500 text-xs text-center">وقت الفريق (ث)</label>
+                <label className="text-xs text-center font-arabic" style={{ color: 'var(--cream-2)' }}>وقت الفريق (ث)</label>
                 <input
                   type="number"
                   min={0}
                   value={timerThink || ''}
                   onChange={e => setTimerThink(Math.max(0, Number(e.target.value) || 0))}
                   placeholder="0"
-                  className="w-full px-3 py-2.5 rounded-xl bg-slate-700 text-white text-center border border-slate-600 focus:border-amber-400 focus:outline-none"
+                  className="w-full px-3 py-2.5 rounded-xl text-center font-arabic outline-none transition-all"
+                  style={inputStyle}
                 />
               </div>
             </div>
 
-            {/* Copy links */}
             <div className="flex flex-col gap-2">
               <button
                 onClick={onCopyTv}
-                className="w-full px-4 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-sm font-bold transition-colors flex items-center justify-between"
+                className="w-full px-4 py-3 rounded-xl text-sm font-bold font-arabic transition-all hover:brightness-110 flex items-center justify-between"
+                style={{ background: 'var(--elevated)', border: '1px solid var(--border-gold)' }}
               >
-                <span className="text-slate-300">رابط الشاشة</span>
-                <span style={{ color: copiedTv ? '#4ade80' : '#f59e0b' }}>{copiedTv ? '✓ تم النسخ' : 'نسخ'}</span>
+                <span style={{ color: 'var(--cream-2)' }}>رابط الشاشة</span>
+                <span style={{ color: copiedTv ? '#4ade80' : 'var(--gold)' }}>{copiedTv ? '✓ تم النسخ' : 'نسخ'}</span>
               </button>
               <button
                 onClick={onCopyPlayer}
-                className="w-full px-4 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-sm font-bold transition-colors flex items-center justify-between"
+                className="w-full px-4 py-3 rounded-xl text-sm font-bold font-arabic transition-all hover:brightness-110 flex items-center justify-between"
+                style={{ background: 'var(--elevated)', border: '1px solid var(--border-gold)' }}
               >
-                <span className="text-slate-300">رابط اللاعبين</span>
-                <span style={{ color: copiedPlayer ? '#4ade80' : '#f59e0b' }}>{copiedPlayer ? '✓ تم النسخ' : 'نسخ'}</span>
+                <span style={{ color: 'var(--cream-2)' }}>رابط اللاعبين</span>
+                <span style={{ color: copiedPlayer ? '#4ade80' : 'var(--gold)' }}>{copiedPlayer ? '✓ تم النسخ' : 'نسخ'}</span>
               </button>
             </div>
           </div>
         ) : (
           <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
             {players.length === 0 ? (
-              <div className="bg-slate-700/50 rounded-2xl p-5 text-slate-500 text-center text-sm">
+              <div
+                className="rounded-2xl p-5 text-center text-sm font-arabic"
+                style={{ background: 'rgba(201,168,76,0.05)', border: '1px dashed rgba(201,168,76,0.2)', color: 'var(--cream-2)' }}
+              >
                 لا يوجد لاعبون متصلون
               </div>
             ) : (
               players.map((name, i) => (
-                <div key={i} className="flex items-center gap-3 bg-slate-700/50 rounded-xl px-4 py-2.5">
-                  <div className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
-                  <span className="text-white font-bold text-sm flex-1">{name}</span>
+                <div
+                  key={i}
+                  className="flex items-center gap-3 rounded-xl px-4 py-2.5"
+                  style={{ background: 'var(--elevated)', border: '1px solid rgba(201,168,76,0.1)' }}
+                >
+                  <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: '#4ade80', boxShadow: '0 0 6px #4ade80' }} />
+                  <span className="font-bold text-sm font-arabic flex-1" style={{ color: 'var(--cream)' }}>{name}</span>
                   <button
                     onClick={() => onKickPlayer(name)}
-                    className="text-slate-500 hover:text-red-400 text-base leading-none transition-colors flex-shrink-0"
+                    className="text-base leading-none transition-all flex-shrink-0 hover:brightness-125"
+                    style={{ color: 'var(--muted)' }}
                     aria-label="إزالة اللاعب"
                   >
                     ✕

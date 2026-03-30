@@ -16,16 +16,16 @@ import type { BuzzWinnerEvent, GameOverEvent, GameResetEvent, LetterCellResponse
 
 export function TvDisplayPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const [cells, setCells] = useState<LetterCellResponse[]>([]);
-  const [buzzWinner, setBuzzWinner] = useState<BuzzWinnerEvent | null>(null);
-  const [gameOver, setGameOver] = useState<GameOverEvent | null>(null);
+  const navigate      = useNavigate();
+  const queryClient   = useQueryClient();
+  const [cells, setCells]           = useState<LetterCellResponse[]>([]);
+  const [buzzWinner, setBuzzWinner]   = useState<BuzzWinnerEvent | null>(null);
+  const [gameOver, setGameOver]       = useState<GameOverEvent | null>(null);
   const [gridContainer, setGridContainer] = useState<HTMLDivElement | null>(null);
 
   const [timerSecondsLeft, setTimerSecondsLeft] = useState(0);
-  const [timerPhase, setTimerPhase] = useState<1 | 2 | null>(null);
-  const [timerTotal, setTimerTotal] = useState(0);
+  const [timerPhase, setTimerPhase]   = useState<1 | 2 | null>(null);
+  const [timerTotal, setTimerTotal]   = useState(0);
   const tvTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [sessionEndedCountdown, setSessionEndedCountdown] = useState<number | null>(null);
 
@@ -49,22 +49,15 @@ export function TvDisplayPage() {
     if (session) setCells(session.cells);
   }, [session]);
 
-
   const { connectionState } = useGameHub(sessionId ?? '', {
     onGridUpdate: useCallback((cell: LetterCellResponse) => {
       setCells(prev => prev.map(c => c.id === cell.id ? cell : c));
     }, []),
-    onBuzzWinner: useCallback((e: BuzzWinnerEvent) => { setBuzzWinner(e); }, []),
-    onGameOver: useCallback((e: GameOverEvent) => setGameOver(e), []),
-    onBuzzerReset: useCallback(() => {
-      setBuzzWinner(null);
-      clearTvTimer();
-    }, [clearTvTimer]),
-    onGameReset: useCallback((e: GameResetEvent) => {
-      setCells(e.cells);
-      setGameOver(null);
-      setBuzzWinner(null);
-      clearTvTimer();
+    onBuzzWinner:  useCallback((e: BuzzWinnerEvent) => setBuzzWinner(e), []),
+    onGameOver:    useCallback((e: GameOverEvent)   => setGameOver(e),  []),
+    onBuzzerReset: useCallback(() => { setBuzzWinner(null); clearTvTimer(); }, [clearTvTimer]),
+    onGameReset:   useCallback((e: GameResetEvent) => {
+      setCells(e.cells); setGameOver(null); setBuzzWinner(null); clearTvTimer();
     }, [clearTvTimer]),
     onTimerStarted: useCallback((e: TimerStartedEvent) => {
       if (tvTimerRef.current) { clearInterval(tvTimerRef.current); tvTimerRef.current = null; }
@@ -87,9 +80,7 @@ export function TvDisplayPage() {
       queryClient.invalidateQueries({ queryKey: queryKeys.session(sessionId!) });
       refetch();
     }, [queryClient, sessionId, refetch]),
-    onSessionEnded: useCallback(() => {
-      setSessionEndedCountdown(5);
-    }, []),
+    onSessionEnded: useCallback(() => setSessionEndedCountdown(5), []),
   });
 
   useEffect(() => {
@@ -108,38 +99,66 @@ export function TvDisplayPage() {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="text-slate-400 text-xl">جارٍ التحميل...</div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--void)' }}>
+        <div className="font-arabic text-xl" style={{ color: 'var(--cream-2)' }}>جارٍ التحميل...</div>
       </div>
     );
   }
 
   return (
     <RtlWrapper>
-      <div className="game-board-root" style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', backgroundColor: '#0f172a' }}>
-        {/* Score bar */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, backgroundColor: '#1e293b', paddingTop: 'calc(0.375rem + env(safe-area-inset-top, 0px))', paddingBottom: '0.375rem', paddingLeft: 'calc(1rem + env(safe-area-inset-left, 0px))', paddingRight: 'calc(1rem + env(safe-area-inset-right, 0px))' }}>
+      <div
+        className="game-board-root"
+        style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--void)' }}
+      >
+        {/* ── Score bar ── */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexShrink: 0,
+          background: 'rgba(14,21,32,0.92)',
+          backdropFilter: 'blur(8px)',
+          borderBottom: '1px solid rgba(201,168,76,0.14)',
+          paddingTop:    'calc(0.5rem + env(safe-area-inset-top, 0px))',
+          paddingBottom: '0.5rem',
+          paddingLeft:   'calc(1.25rem + env(safe-area-inset-left, 0px))',
+          paddingRight:  'calc(1.25rem + env(safe-area-inset-right, 0px))',
+        }}>
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate('/')}
-              className="text-slate-400 hover:text-white text-sm font-bold px-2 py-1 rounded-lg hover:bg-slate-700 transition-colors"
+              className="text-sm font-bold font-arabic px-2 py-1 rounded-lg transition-all hover:brightness-125"
+              style={{ color: 'var(--cream-2)', background: 'transparent' }}
             >
               ← رجوع
             </button>
             <TeamScoreBadge label="فريق ١" score={team1Score} color={session.team1Color} />
           </div>
+
+          {/* Center: logo + room code */}
           <div className="flex items-center gap-3">
-            <span className="text-base font-black text-amber-400">حروف</span>
-            <div className="flex items-center gap-1.5 bg-slate-700 px-2.5 py-1 rounded-lg border border-slate-600">
-              <span className="text-slate-400 text-xs font-bold">رمز الغرفة</span>
-              <span className="text-white font-black text-base tracking-widest">{session.roomCode}</span>
+            <span style={{ fontFamily: "'Amiri', serif", fontSize: '1.3rem', color: 'var(--gold-2)' }}>
+              حروف
+            </span>
+            <div
+              className="flex items-center gap-1.5 px-3 py-1 rounded-lg"
+              style={{ background: 'var(--elevated)', border: '1px solid var(--border-gold)' }}
+            >
+              <span className="text-xs font-arabic font-bold" style={{ color: 'var(--cream-2)' }}>
+                رمز الغرفة
+              </span>
+              <span className="font-black text-base tracking-widest font-arabic" style={{ color: 'var(--gold)' }}>
+                {session.roomCode}
+              </span>
             </div>
             <ConnectionStatus state={connectionState} />
           </div>
+
           <TeamScoreBadge label="فريق ٢" score={team2Score} color={session.team2Color} />
         </div>
 
-        {/* Grid — fills remaining space, scales to fit */}
+        {/* ── Grid — fills remaining space ── */}
         <div
           ref={setGridContainer}
           style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
@@ -174,9 +193,19 @@ export function TvDisplayPage() {
         />
       )}
       {sessionEndedCountdown !== null && (
-        <div className="fixed inset-0 bg-black/80 flex flex-col items-center justify-center z-50 gap-4">
-          <div className="text-5xl font-black text-white">انتهت الجلسة</div>
-          <div className="text-slate-400 text-xl">العودة للرئيسية خلال {sessionEndedCountdown} ثوانٍ...</div>
+        <div
+          className="fixed inset-0 flex flex-col items-center justify-center z-50 gap-4"
+          style={{ background: 'rgba(7,9,15,0.92)', backdropFilter: 'blur(4px)' }}
+        >
+          <div
+            className="font-bold font-arabic"
+            style={{ fontFamily: "'Amiri', serif", fontSize: '3.5rem', color: 'var(--cream)' }}
+          >
+            انتهت الجلسة
+          </div>
+          <div className="text-xl font-arabic" style={{ color: 'var(--cream-2)' }}>
+            العودة للرئيسية خلال {sessionEndedCountdown} ثوانٍ...
+          </div>
         </div>
       )}
     </RtlWrapper>

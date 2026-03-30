@@ -6,8 +6,8 @@ import { login } from '../../api/auth';
 export function HostLoginPage() {
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [error, setError]       = useState('');
+  const [loading, setLoading]   = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,10 +26,19 @@ export function HostLoginPage() {
 
   return (
     <RtlWrapper>
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-        <form onSubmit={handleSubmit} className="w-full max-w-sm flex flex-col gap-4">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--void)' }}>
+        <form
+          onSubmit={handleSubmit}
+          className="w-full max-w-sm flex flex-col gap-4"
+          style={{ animation: 'float-in 0.5s ease both' }}
+        >
           <div className="text-center mb-2">
-            <h1 className="text-4xl font-black text-amber-400">دخول المقدم</h1>
+            <h1
+              className="font-bold font-arabic"
+              style={{ fontFamily: "'Amiri', serif", fontSize: '2.5rem', color: 'var(--gold-2)' }}
+            >
+              دخول المقدم
+            </h1>
           </div>
 
           <input
@@ -37,18 +46,30 @@ export function HostLoginPage() {
             value={password}
             onChange={e => setPassword(e.target.value)}
             placeholder="كلمة المرور"
-            className="w-full px-4 py-3 rounded-xl bg-slate-800 text-white placeholder-slate-500 border border-slate-700 focus:border-amber-400 focus:outline-none text-center"
+            className="w-full px-4 py-3 rounded-xl font-arabic text-center outline-none transition-all"
+            style={{
+              background: 'var(--surface)',
+              color: 'var(--cream)',
+              border: '1px solid rgba(201,168,76,0.22)',
+            }}
+            onFocus={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.55)')}
+            onBlur={e  => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.22)')}
             autoFocus
           />
 
           {error && (
-            <p className="text-red-400 text-sm text-center">{error}</p>
+            <p className="text-sm text-center font-arabic" style={{ color: '#f87171' }}>{error}</p>
           )}
 
           <button
             type="submit"
             disabled={loading || !password}
-            className="w-full py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-900 font-black text-lg transition-colors disabled:opacity-50"
+            className="w-full py-3 rounded-2xl font-black text-lg font-arabic transition-all hover:brightness-110 disabled:opacity-50"
+            style={{
+              background: 'linear-gradient(135deg, var(--gold-dim), var(--gold), var(--gold-2))',
+              color: '#07090F',
+              boxShadow: '0 4px 22px var(--gold-glow)',
+            }}
           >
             {loading ? 'جارٍ الدخول...' : 'دخول'}
           </button>

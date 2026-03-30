@@ -16,11 +16,11 @@ export function PlayerBuzzerPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [playerName, setPlayerName] = useState(() => sessionStorage.getItem('hurof_player') ?? '');
+  const [playerName, setPlayerName]     = useState(() => sessionStorage.getItem('hurof_player') ?? '');
   const [nameSubmitted, setNameSubmitted] = useState(!!sessionStorage.getItem('hurof_player'));
-  const [buzzWinner, setBuzzWinner] = useState<BuzzWinnerEvent | null>(null);
-  const [gameOver, setGameOver] = useState<GameOverEvent | null>(null);
-  const [activeCellId, setActiveCellId] = useState<string | null>(null);
+  const [buzzWinner, setBuzzWinner]       = useState<BuzzWinnerEvent | null>(null);
+  const [gameOver, setGameOver]           = useState<GameOverEvent | null>(null);
+  const [activeCellId, setActiveCellId]   = useState<string | null>(null);
 
   const { data: session, isLoading, refetch } = useQuery({
     queryKey: queryKeys.session(sessionId!),
@@ -37,7 +37,6 @@ export function PlayerBuzzerPage() {
     }
   }, [session]);
 
-  // Stop the connection on unmount (only when actually Connected, to avoid killing it mid-negotiation in React Strict Mode)
   useEffect(() => {
     return () => {
       if (sessionId) {
@@ -50,7 +49,6 @@ export function PlayerBuzzerPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // After name is submitted, invoke JoinAsPlayer so the host can see us
   useEffect(() => {
     if (!nameSubmitted || !sessionId || !playerName) return;
     const conn = getHubConnection(sessionId);
@@ -69,13 +67,11 @@ export function PlayerBuzzerPage() {
       if (cell.state === 'Active') setActiveCellId(cell.id);
       else setActiveCellId(prev => prev === cell.id ? null : prev);
     }, []),
-    onBuzzWinner: useCallback((e: BuzzWinnerEvent) => setBuzzWinner(e), []),
-    onGameOver: useCallback((e: GameOverEvent) => setGameOver(e), []),
+    onBuzzWinner:  useCallback((e: BuzzWinnerEvent) => setBuzzWinner(e), []),
+    onGameOver:    useCallback((e: GameOverEvent)  => setGameOver(e),   []),
     onBuzzerReset: useCallback(() => setBuzzWinner(null), []),
-    onGameReset: useCallback((_e: GameResetEvent) => {
-      setGameOver(null);
-      setBuzzWinner(null);
-      setActiveCellId(null);
+    onGameReset:   useCallback((_e: GameResetEvent) => {
+      setGameOver(null); setBuzzWinner(null); setActiveCellId(null);
     }, []),
     onReconnected: useCallback(() => {
       queryClient.invalidateQueries({ queryKey: queryKeys.session(sessionId!) });
@@ -90,13 +86,12 @@ export function PlayerBuzzerPage() {
           setBuzzWinner(null);
         }
       });
-      // Re-register as player after reconnect
       if (playerName && sessionId) {
         const conn = getHubConnection(sessionId);
         conn.invoke('JoinAsPlayer', sessionId, playerName).catch(() => {});
       }
     }, [queryClient, sessionId, refetch, playerName]),
-    onKicked: useCallback(() => navigate('/'), [navigate]),
+    onKicked:       useCallback(() => navigate('/'), [navigate]),
     onSessionEnded: useCallback(() => navigate('/'), [navigate]),
   });
 
@@ -132,24 +127,27 @@ export function PlayerBuzzerPage() {
     navigate('/');
   };
 
+  /* ── Loading ── */
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="text-slate-400">جارٍ التحميل...</div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--void)' }}>
+        <div className="font-arabic" style={{ color: 'var(--cream-2)' }}>جارٍ التحميل...</div>
       </div>
     );
   }
 
+  /* ── No session ── */
   if (!session) {
     return (
       <RtlWrapper>
-        <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+        <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--void)' }}>
           <div className="text-center flex flex-col gap-4">
             <div className="text-4xl mb-2">❌</div>
-            <p className="text-slate-400">الجلسة غير موجودة</p>
+            <p className="font-arabic" style={{ color: 'var(--cream-2)' }}>الجلسة غير موجودة</p>
             <button
               onClick={() => navigate('/')}
-              className="px-6 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-bold transition-colors"
+              className="px-6 py-2.5 rounded-xl font-bold font-arabic transition-all hover:brightness-110"
+              style={{ background: 'var(--elevated)', color: 'var(--cream)', border: '1px solid var(--border-gold)' }}
             >
               ← رجوع للرئيسية
             </button>
@@ -159,24 +157,47 @@ export function PlayerBuzzerPage() {
     );
   }
 
+  /* ── Name entry ── */
   if (!nameSubmitted) {
     return (
       <RtlWrapper>
-        <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-          <form onSubmit={handleNameSubmit} className="w-full max-w-xs flex flex-col gap-4">
-            <h2 className="text-2xl font-black text-amber-400 text-center">أدخل اسمك</h2>
+        <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--void)' }}>
+          <form
+            onSubmit={handleNameSubmit}
+            className="w-full max-w-xs flex flex-col gap-4"
+            style={{ animation: 'float-in-scale 0.45s ease both' }}
+          >
+            <h2
+              className="text-center font-bold"
+              style={{ fontFamily: "'Amiri', serif", fontSize: '2.2rem', color: 'var(--gold-2)' }}
+            >
+              أدخل اسمك
+            </h2>
             <input
               type="text"
               value={playerName}
               onChange={e => setPlayerName(e.target.value)}
               placeholder="اسمك"
-              className="w-full px-4 py-3 rounded-xl bg-slate-800 text-white placeholder-slate-500 border border-slate-700 focus:border-amber-400 focus:outline-none text-center"
+              className="w-full px-4 py-3 rounded-xl font-arabic text-center outline-none transition-all"
+              style={{
+                background: 'var(--surface)',
+                color: 'var(--cream)',
+                border: '1px solid rgba(201,168,76,0.22)',
+                fontSize: '1.1rem',
+              }}
+              onFocus={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.55)')}
+              onBlur={e  => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.22)')}
               autoFocus
             />
             <button
               type="submit"
               disabled={!playerName.trim()}
-              className="w-full py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-900 font-black text-lg disabled:opacity-40"
+              className="w-full py-3 rounded-2xl font-black text-lg font-arabic transition-all disabled:opacity-40 hover:brightness-110"
+              style={{
+                background: 'linear-gradient(135deg, var(--gold-dim), var(--gold), var(--gold-2))',
+                color: '#07090F',
+                boxShadow: '0 4px 22px var(--gold-glow)',
+              }}
             >
               انضم
             </button>
@@ -188,44 +209,114 @@ export function PlayerBuzzerPage() {
 
   const hasActiveLetter = !!activeCellId;
   const isLocked = !!buzzWinner;
-  const iWon = buzzWinner?.playerName === playerName;
+  const iWon     = buzzWinner?.playerName === playerName;
+  const canBuzz  = !isLocked && hasActiveLetter && session.status !== 'Ended';
+
+  /* ── Buzzer state config ── */
+  type BuzzerState = 'canBuzz' | 'won' | 'lost' | 'waiting';
+  const buzzerState: BuzzerState = isLocked ? (iWon ? 'won' : 'lost') : !hasActiveLetter ? 'waiting' : 'canBuzz';
+
+  const buzzerConfig = {
+    canBuzz: {
+      bg:    'linear-gradient(135deg, var(--gold-dim) 0%, var(--gold) 45%, var(--gold-2) 100%)',
+      glow:  '0 0 40px var(--gold-glow), 0 0 80px rgba(201,168,76,0.15)',
+      color: '#07090F',
+      text:  'اضغط!',
+      ring:  true,
+    },
+    won: {
+      bg:    'linear-gradient(135deg, #166534 0%, #22c55e 50%, #4ade80 100%)',
+      glow:  '0 0 40px rgba(74,222,128,0.35), 0 0 80px rgba(74,222,128,0.15)',
+      color: '#fff',
+      text:  '🎉 أنت أول!',
+      ring:  false,
+    },
+    lost: {
+      bg:    'var(--surface)',
+      glow:  'none',
+      color: 'var(--cream-2)',
+      text:  `🔒 ${buzzWinner?.playerName ?? ''}`,
+      ring:  false,
+    },
+    waiting: {
+      bg:    'var(--surface)',
+      glow:  'none',
+      color: 'var(--muted)',
+      text:  '⏳ انتظر...',
+      ring:  false,
+    },
+  }[buzzerState];
 
   return (
     <RtlWrapper>
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center gap-8" style={{ padding: 'calc(1rem + env(safe-area-inset-top, 0px)) calc(1rem + env(safe-area-inset-right, 0px)) calc(1rem + env(safe-area-inset-bottom, 0px)) calc(1rem + env(safe-area-inset-left, 0px))' }}>
+      <div
+        className="min-h-screen flex flex-col items-center justify-center gap-10"
+        style={{
+          background: 'var(--void)',
+          padding: 'calc(1.5rem + env(safe-area-inset-top, 0px)) calc(1.5rem + env(safe-area-inset-right, 0px)) calc(1.5rem + env(safe-area-inset-bottom, 0px)) calc(1.5rem + env(safe-area-inset-left, 0px))',
+        }}
+      >
+        {/* Player name */}
         <div className="flex items-center gap-3">
-          <span className="text-slate-300 text-lg font-bold">{playerName}</span>
+          <span className="text-lg font-bold font-arabic" style={{ color: 'var(--cream)' }}>
+            {playerName}
+          </span>
           <button
             onClick={handleChangeName}
-            className="text-slate-500 hover:text-slate-300 text-sm underline transition-colors"
+            className="text-sm font-arabic underline transition-all hover:brightness-125"
+            style={{ color: 'var(--cream-2)' }}
           >
             تغيير الاسم
           </button>
         </div>
 
-        <button
-          onClick={() => buzzMutation.mutate()}
-          disabled={isLocked || !hasActiveLetter || session.status === 'Ended'}
-          className={`w-56 h-56 rounded-full font-black text-3xl transition-all active:scale-95 shadow-2xl
-            ${isLocked
-              ? iWon
-                ? 'bg-green-500 text-white'
-                : 'bg-slate-700 text-slate-500 cursor-not-allowed'
-              : !hasActiveLetter
-                ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                : 'bg-amber-500 hover:bg-amber-400 text-slate-900 cursor-pointer'
-            }`}
-        >
-          {isLocked
-            ? iWon ? '🎉 أنت أول!' : `🔒 ${buzzWinner!.playerName}`
-            : !hasActiveLetter ? '⏳ انتظر...' : '🔔 اضغط!'}
-        </button>
+        {/* Buzzer button */}
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {/* Expanding rings when active */}
+          {buzzerConfig.ring && (
+            <>
+              {[0, 0.6, 1.2].map(delay => (
+                <div
+                  key={delay}
+                  style={{
+                    position: 'absolute',
+                    width: 224,
+                    height: 224,
+                    borderRadius: '50%',
+                    border: '2px solid var(--gold)',
+                    animation: `ring-expand 1.8s ${delay}s ease-out infinite`,
+                    pointerEvents: 'none',
+                  }}
+                />
+              ))}
+            </>
+          )}
+
+          <button
+            onClick={() => canBuzz && buzzMutation.mutate()}
+            disabled={!canBuzz}
+            className="w-56 h-56 rounded-full font-black text-3xl font-arabic transition-all"
+            style={{
+              background: buzzerConfig.bg,
+              color: buzzerConfig.color,
+              boxShadow: buzzerConfig.glow,
+              border: `2px solid ${buzzerState === 'canBuzz' ? 'rgba(201,168,76,0.5)' : 'transparent'}`,
+              cursor: canBuzz ? 'pointer' : 'default',
+            }}
+            onMouseDown={e => { if (canBuzz) (e.currentTarget.style.transform = 'scale(0.95)'); }}
+            onMouseUp={e   => { (e.currentTarget.style.transform = 'scale(1)'); }}
+            onMouseLeave={e => { (e.currentTarget.style.transform = 'scale(1)'); }}
+          >
+            {buzzerConfig.text}
+          </button>
+        </div>
 
         <ConnectionStatus state={connectionState} />
 
         <button
           onClick={handleExit}
-          className="text-slate-600 hover:text-slate-400 text-sm underline transition-colors"
+          className="text-sm font-arabic underline transition-all hover:brightness-125"
+          style={{ color: 'var(--muted)' }}
         >
           الخروج من اللعبة
         </button>

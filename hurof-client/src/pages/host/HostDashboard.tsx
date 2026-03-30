@@ -55,7 +55,7 @@ export function HostDashboard() {
   const [gameOver, setGameOver] = useState<GameOverEvent | null>(null);
   const [players, setPlayers] = useState<string[]>([]);
   const [sidebarTab, setSidebarTab] = useState<'game' | 'players'>('game');
-  const [config, setConfig] = useState<SessionConfig>({ gridSize: 5, team1Color: '#0013a3', team2Color: '#0099ff' });
+  const [config, setConfig] = useState<SessionConfig>({ gridSize: 5, team1Color: '#D4702A', team2Color: '#2A8A8A' });
   const [rejoinError, setRejoinError] = useState('');
   const [hostTakenError, setHostTakenError] = useState('');
   const hasJoinedAsHostRef = useRef(false);
@@ -366,11 +366,11 @@ export function HostDashboard() {
   // --- Host slot taken error ---
   if (hostTakenError) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--void)' }}>
         <div className="text-center flex flex-col gap-4">
           <div className="text-4xl">🚫</div>
-          <p className="text-red-400 font-bold text-lg">{hostTakenError}</p>
-          <p className="text-slate-500 text-sm">سيتم توجيهك للصفحة الرئيسية...</p>
+          <p className="font-bold text-lg" style={{ color: '#f87171' }}>{hostTakenError}</p>
+          <p className="text-sm font-arabic" style={{ color: 'var(--cream-2)' }}>سيتم توجيهك للصفحة الرئيسية...</p>
         </div>
       </div>
     );
@@ -379,8 +379,8 @@ export function HostDashboard() {
   // --- Rejoin loading state ---
   if (rejoinRoomCode && !session && !rejoinError) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="text-slate-400">جارٍ تحميل الجلسة...</div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--void)' }}>
+        <div className="font-arabic" style={{ color: 'var(--cream-2)' }}>جارٍ تحميل الجلسة...</div>
       </div>
     );
   }
@@ -389,25 +389,41 @@ export function HostDashboard() {
   if (!session) {
     return (
       <RtlWrapper>
-        <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+        <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--void)' }}>
           <button
             onClick={() => navigate('/')}
-            className="absolute top-4 right-4 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-sm font-bold transition-colors"
+            className="absolute top-4 right-4 px-4 py-2 rounded-xl text-sm font-bold font-arabic transition-all hover:brightness-110"
+            style={{ background: 'var(--elevated)', color: 'var(--cream-2)', border: '1px solid var(--border-gold)' }}
           >
             ← رجوع
           </button>
-          <div className="w-full max-w-sm flex flex-col gap-5">
-            <h1 className="text-3xl font-black text-amber-400 text-center">إعداد اللعبة</h1>
+          <div className="w-full max-w-sm flex flex-col gap-5" style={{ animation: 'float-in 0.5s ease both' }}>
+            <h1
+              className="text-center font-bold font-arabic"
+              style={{ fontFamily: "'Amiri', serif", fontSize: '2.5rem', color: 'var(--gold-2)' }}
+            >
+              إعداد اللعبة
+            </h1>
             {rejoinError && (
-              <p className="text-red-400 text-sm text-center bg-red-900/30 border border-red-700 rounded-xl px-4 py-2">{rejoinError}</p>
+              <p
+                className="text-sm text-center font-arabic rounded-xl px-4 py-2"
+                style={{ color: '#f87171', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)' }}
+              >
+                {rejoinError}
+              </p>
             )}
 
             <div className="flex flex-col gap-2">
-              <label className="text-slate-400 text-sm">حجم الشبكة</label>
+              <label className="text-sm font-arabic" style={{ color: 'var(--cream-2)' }}>حجم الشبكة</label>
               <select
                 value={config.gridSize}
                 onChange={e => setConfig(p => ({ ...p, gridSize: Number(e.target.value) }))}
-                className="w-full px-4 py-3 rounded-xl bg-slate-800 text-white border border-slate-700 focus:border-amber-400 focus:outline-none"
+                className="w-full px-4 py-3 rounded-xl font-arabic outline-none transition-all"
+                style={{
+                  background: 'var(--surface)',
+                  color: 'var(--cream)',
+                  border: '1px solid var(--border-gold)',
+                }}
               >
                 {[3, 5, 7, 9].map(n => (
                   <option key={n} value={n}>{n}×{n}</option>
@@ -417,21 +433,23 @@ export function HostDashboard() {
 
             <div className="flex gap-4">
               <div className="flex-1 flex flex-col gap-2">
-                <label className="text-slate-400 text-sm">لون فريق ١</label>
+                <label className="text-sm font-arabic" style={{ color: 'var(--cream-2)' }}>لون فريق ١</label>
                 <input
                   type="color"
                   value={config.team1Color}
                   onChange={e => setConfig(p => ({ ...p, team1Color: e.target.value }))}
-                  className="w-full h-12 rounded-xl cursor-pointer bg-slate-800 border border-slate-700"
+                  className="w-full h-12 rounded-xl cursor-pointer"
+                  style={{ background: 'var(--surface)', border: '1px solid var(--border-gold)' }}
                 />
               </div>
               <div className="flex-1 flex flex-col gap-2">
-                <label className="text-slate-400 text-sm">لون فريق ٢</label>
+                <label className="text-sm font-arabic" style={{ color: 'var(--cream-2)' }}>لون فريق ٢</label>
                 <input
                   type="color"
                   value={config.team2Color}
                   onChange={e => setConfig(p => ({ ...p, team2Color: e.target.value }))}
-                  className="w-full h-12 rounded-xl cursor-pointer bg-slate-800 border border-slate-700"
+                  className="w-full h-12 rounded-xl cursor-pointer"
+                  style={{ background: 'var(--surface)', border: '1px solid var(--border-gold)' }}
                 />
               </div>
             </div>
@@ -439,7 +457,12 @@ export function HostDashboard() {
             <button
               onClick={() => createMutation.mutate()}
               disabled={createMutation.isPending}
-              className="w-full py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-900 font-black text-lg transition-colors disabled:opacity-50"
+              className="w-full py-4 rounded-2xl font-black text-lg font-arabic transition-all hover:brightness-110 disabled:opacity-50"
+              style={{
+                background: 'linear-gradient(135deg, var(--gold-dim), var(--gold), var(--gold-2))',
+                color: '#07090F',
+                boxShadow: '0 4px 24px var(--gold-glow)',
+              }}
             >
               {createMutation.isPending ? 'جارٍ الإنشاء...' : 'ابدأ اللعبة'}
             </button>
@@ -456,45 +479,46 @@ export function HostDashboard() {
         /* ══════════════════════════════════
            MOBILE LAYOUT
            ══════════════════════════════════ */
-        <div className="game-board-root" style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', backgroundColor: '#0f172a' }}>
+        <div className="game-board-root" style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', backgroundColor: 'var(--void)' }}>
 
           {/* Mobile top bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', paddingTop: 'calc(0.5rem + env(safe-area-inset-top, 0px))', paddingBottom: '0.5rem', paddingLeft: 'calc(0.6rem + env(safe-area-inset-left, 0px))', paddingRight: 'calc(0.6rem + env(safe-area-inset-right, 0px))', backgroundColor: '#1e293b', borderBottom: '1px solid #334155', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', paddingTop: 'calc(0.5rem + env(safe-area-inset-top, 0px))', paddingBottom: '0.5rem', paddingLeft: 'calc(0.6rem + env(safe-area-inset-left, 0px))', paddingRight: 'calc(0.6rem + env(safe-area-inset-right, 0px))', background: 'var(--surface)', borderBottom: '1px solid rgba(201,168,76,0.14)', flexShrink: 0 }}>
             <button
               onClick={() => setShowMobileSettings(true)}
-              className="p-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-lg transition-colors"
+              className="p-2 rounded-xl text-lg transition-all hover:brightness-110"
+              style={{ background: 'var(--elevated)', border: '1px solid var(--border-gold)' }}
               aria-label="الإعدادات"
             >⚙️</button>
             <button
               onClick={() => copyToClipboard(`/tv/${session.roomCode}`, setCopiedTv)}
-              className="flex-1 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-bold transition-colors"
-              style={{ color: copiedTv ? '#4ade80' : '#f59e0b' }}
+              className="flex-1 py-1.5 rounded-xl text-xs font-bold font-arabic transition-all hover:brightness-110"
+              style={{ background: 'var(--elevated)', border: '1px solid var(--border-gold)', color: copiedTv ? '#4ade80' : 'var(--gold)' }}
             >{copiedTv ? '✓ شاشة' : '📺 شاشة'}</button>
             <button
               onClick={() => copyToClipboard(`/play/${session.roomCode}`, setCopiedPlayer)}
-              className="flex-1 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-bold transition-colors"
-              style={{ color: copiedPlayer ? '#4ade80' : '#f59e0b' }}
+              className="flex-1 py-1.5 rounded-xl text-xs font-bold font-arabic transition-all hover:brightness-110"
+              style={{ background: 'var(--elevated)', border: '1px solid var(--border-gold)', color: copiedPlayer ? '#4ade80' : 'var(--gold)' }}
             >{copiedPlayer ? '✓ لاعبون' : '👤 لاعبون'}</button>
-            <div className="flex items-center gap-1 px-2 py-1.5 rounded-xl bg-slate-700">
-              <span className="text-slate-400 text-xs">👥</span>
-              <span className="text-white font-black text-sm">{players.length}</span>
+            <div className="flex items-center gap-1 px-2 py-1.5 rounded-xl" style={{ background: 'var(--elevated)', border: '1px solid var(--border-gold)' }}>
+              <span className="text-xs" style={{ color: 'var(--cream-2)' }}>👥</span>
+              <span className="font-black text-sm font-arabic" style={{ color: 'var(--cream)' }}>{players.length}</span>
             </div>
-            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl bg-slate-700">
-              <span className="font-black text-sm" style={{ color: session.team1Color }}>{team1Score}</span>
-              <span className="text-slate-600 text-xs">|</span>
-              <span className="font-black text-sm" style={{ color: session.team2Color }}>{team2Score}</span>
+            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl" style={{ background: 'var(--elevated)', border: '1px solid var(--border-gold)' }}>
+              <span className="font-black text-sm font-arabic" style={{ color: session.team1Color }}>{team1Score}</span>
+              <span className="text-xs" style={{ color: 'var(--muted)' }}>|</span>
+              <span className="font-black text-sm font-arabic" style={{ color: session.team2Color }}>{team2Score}</span>
             </div>
           </div>
 
           {/* Room code strip */}
-          <div style={{ height: 28, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#0f172a', borderBottom: '1px solid #1e293b' }}>
-            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700 }}>رمز الغرفة</span>
-            <span style={{ color: '#fff', fontSize: 14, fontWeight: 900, letterSpacing: '0.15em' }}>{session.roomCode}</span>
+          <div style={{ height: 28, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: 'var(--void)', borderBottom: '1px solid rgba(201,168,76,0.1)' }}>
+            <span style={{ color: 'var(--cream-2)', fontSize: 10, fontWeight: 700, fontFamily: "'Cairo', sans-serif" }}>رمز الغرفة</span>
+            <span style={{ color: 'var(--gold-2)', fontSize: 14, fontWeight: 900, letterSpacing: '0.15em', fontFamily: "'Cairo', sans-serif" }}>{session.roomCode}</span>
           </div>
 
           {/* Inline question — shown above grid when a cell is active */}
           {activeCellId && (
-            <div style={{ flexShrink: 0, padding: '0.375rem 0.5rem', borderBottom: '1px solid #334155', backgroundColor: '#1e293b' }}>
+            <div style={{ flexShrink: 0, padding: '0.375rem 0.5rem', borderBottom: '1px solid rgba(201,168,76,0.14)', backgroundColor: 'var(--surface)' }}>
               {questionLoading ? (
                 <div className="flex justify-center py-2">
                   <div className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
@@ -535,16 +559,17 @@ export function HostDashboard() {
 
           {/* Buzz winner bar */}
           {buzzWinner && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', backgroundColor: '#451a03', borderTop: '1px solid #f59e0b', flexShrink: 0 }}>
-              <span className="text-amber-400 font-black text-sm flex-1">🔔 {buzzWinner.playerName}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', background: 'rgba(201,168,76,0.1)', borderTop: '1px solid rgba(201,168,76,0.35)', flexShrink: 0 }}>
+              <span className="font-black text-sm flex-1 font-arabic" style={{ color: 'var(--gold-2)' }}>🔔 {buzzWinner.playerName}</span>
               {timerPhase !== null && timerSecondsLeft > 0 && (
-                <span className="font-black text-base" style={{ color: timerSecondsLeft <= 5 ? '#ef4444' : '#f59e0b' }}>
+                <span className="font-black text-base font-arabic" style={{ color: timerSecondsLeft <= 5 ? '#f87171' : 'var(--gold)' }}>
                   {timerSecondsLeft}ث
                 </span>
               )}
               <button
                 onClick={handleResetBuzzer}
-                className="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs font-bold transition-colors"
+                className="px-3 py-1.5 rounded-xl text-xs font-bold font-arabic transition-all hover:brightness-110"
+                style={{ background: 'var(--elevated)', color: 'var(--cream-2)', border: '1px solid var(--border-gold)' }}
               >
                 إعادة ضبط
               </button>
@@ -552,11 +577,12 @@ export function HostDashboard() {
           )}
 
           {/* Bottom bar */}
-          <div style={{ paddingTop: '0.5rem', paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom, 0px))', paddingLeft: 'calc(0.75rem + env(safe-area-inset-left, 0px))', paddingRight: 'calc(0.75rem + env(safe-area-inset-right, 0px))', backgroundColor: '#1e293b', borderTop: '1px solid #334155', flexShrink: 0 }}>
+          <div style={{ paddingTop: '0.5rem', paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom, 0px))', paddingLeft: 'calc(0.75rem + env(safe-area-inset-left, 0px))', paddingRight: 'calc(0.75rem + env(safe-area-inset-right, 0px))', background: 'var(--surface)', borderTop: '1px solid rgba(201,168,76,0.14)', flexShrink: 0 }}>
             <button
               onClick={() => setShowEndConfirm(true)}
               disabled={endMutation.isPending}
-              className="w-full py-2.5 rounded-xl bg-red-900/50 hover:bg-red-800 text-red-400 text-sm font-bold transition-colors disabled:opacity-50"
+              className="w-full py-2.5 rounded-xl text-sm font-bold font-arabic transition-all hover:brightness-110 disabled:opacity-50"
+            style={{ background: 'rgba(239,68,68,0.12)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' }}
             >
               إنهاء اللعبة
             </button>
@@ -566,36 +592,46 @@ export function HostDashboard() {
         /* ══════════════════════════════════
            DESKTOP LAYOUT
            ══════════════════════════════════ */
-        <div className="game-board-root" style={{ height: '100vh', display: 'flex', overflow: 'hidden', backgroundColor: '#0f172a' }}>
+        <div className="game-board-root" style={{ height: '100vh', display: 'flex', overflow: 'hidden', backgroundColor: 'var(--void)' }}>
 
         {/* ── Part 1: Sidebar (~22%) ── */}
-        <div style={{ width: '22%' }} className="host-sidebar flex flex-col gap-3 p-4 bg-slate-800 border-l border-slate-700 overflow-y-auto">
+        <div style={{ width: '22%', background: 'var(--surface)', borderLeft: '1px solid rgba(201,168,76,0.14)' }} className="host-sidebar flex flex-col gap-3 p-4 overflow-y-auto">
 
           {/* Team scores */}
           <div className="flex flex-col gap-2">
-            <div className="score-box flex items-center justify-between px-4 py-3 rounded-xl"
-              style={{ backgroundColor: session.team1Color + '28', border: `2px solid ${session.team1Color}` }}>
-              <span className="text-white font-bold text-sm">فريق ١</span>
-              <span className="score-number text-white font-black text-2xl">{team1Score}</span>
+            <div
+              className="score-box flex items-center justify-between px-4 py-3 rounded-xl"
+              style={{ background: session.team1Color + '18', border: `1px solid ${session.team1Color}66`, boxShadow: `0 0 12px ${session.team1Color}22` }}
+            >
+              <span className="font-bold text-sm font-arabic" style={{ color: 'var(--cream)' }}>فريق ١</span>
+              <span className="score-number font-black text-2xl font-arabic" style={{ color: session.team1Color }}>{team1Score}</span>
             </div>
-            <div className="score-box flex items-center justify-between px-4 py-3 rounded-xl"
-              style={{ backgroundColor: session.team2Color + '28', border: `2px solid ${session.team2Color}` }}>
-              <span className="text-white font-bold text-sm">فريق ٢</span>
-              <span className="score-number text-white font-black text-2xl">{team2Score}</span>
+            <div
+              className="score-box flex items-center justify-between px-4 py-3 rounded-xl"
+              style={{ background: session.team2Color + '18', border: `1px solid ${session.team2Color}66`, boxShadow: `0 0 12px ${session.team2Color}22` }}
+            >
+              <span className="font-bold text-sm font-arabic" style={{ color: 'var(--cream)' }}>فريق ٢</span>
+              <span className="score-number font-black text-2xl font-arabic" style={{ color: session.team2Color }}>{team2Score}</span>
             </div>
           </div>
 
           {/* Tab switcher */}
-          <div className="flex rounded-xl overflow-hidden border border-slate-700">
+          <div className="flex rounded-xl overflow-hidden" style={{ border: '1px solid var(--border-gold)' }}>
             <button
               onClick={() => setSidebarTab('game')}
-              className={`flex-1 py-2 text-sm font-bold transition-colors ${sidebarTab === 'game' ? 'bg-amber-500 text-slate-900' : 'bg-slate-700 text-slate-400 hover:text-white'}`}
+              className="flex-1 py-2 text-sm font-bold font-arabic transition-all"
+              style={sidebarTab === 'game'
+                ? { background: 'linear-gradient(135deg, var(--gold-dim), var(--gold))', color: '#07090F' }
+                : { background: 'var(--elevated)', color: 'var(--cream-2)' }}
             >
               سؤال
             </button>
             <button
               onClick={() => setSidebarTab('players')}
-              className={`flex-1 py-2 text-sm font-bold transition-colors ${sidebarTab === 'players' ? 'bg-amber-500 text-slate-900' : 'bg-slate-700 text-slate-400 hover:text-white'}`}
+              className="flex-1 py-2 text-sm font-bold font-arabic transition-all"
+              style={sidebarTab === 'players'
+                ? { background: 'linear-gradient(135deg, var(--gold-dim), var(--gold))', color: '#07090F' }
+                : { background: 'var(--elevated)', color: 'var(--cream-2)' }}
             >
               اللاعبون {players.length > 0 && `(${players.length})`}
             </button>
@@ -605,20 +641,21 @@ export function HostDashboard() {
             <>
               {/* Buzz winner */}
               {buzzWinner && (
-                <div className="flex flex-col gap-2 bg-amber-500/10 border border-amber-500 rounded-2xl p-4">
-                  <div className="text-amber-400 text-xs font-bold uppercase tracking-wide">ضغط أول!</div>
-                  <div className="text-white font-black text-xl">{buzzWinner.playerName}</div>
+                <div className="flex flex-col gap-2 rounded-2xl p-4" style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.35)' }}>
+                  <div className="text-xs font-bold font-arabic uppercase tracking-wide" style={{ color: 'var(--gold-2)' }}>ضغط أول!</div>
+                  <div className="font-black text-xl font-arabic" style={{ color: 'var(--cream)' }}>{buzzWinner.playerName}</div>
                   {timerPhase !== null && timerSecondsLeft > 0 && (
                     <div
-                      className="text-center font-black text-3xl"
-                      style={{ color: timerSecondsLeft <= 5 ? '#ef4444' : '#f59e0b' }}
+                      className="text-center font-black text-3xl font-arabic"
+                      style={{ color: timerSecondsLeft <= 5 ? '#f87171' : 'var(--gold)' }}
                     >
                       {timerSecondsLeft} ث
                     </div>
                   )}
                   <button
                     onClick={handleResetBuzzer}
-                    className="w-full py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-bold transition-colors"
+                    className="w-full py-2 rounded-xl text-sm font-bold font-arabic transition-all hover:brightness-110"
+                    style={{ background: 'var(--elevated)', color: 'var(--cream-2)', border: '1px solid var(--border-gold)' }}
                   >
                     إعادة ضبط الجرس
                   </button>
@@ -628,19 +665,20 @@ export function HostDashboard() {
               {/* Question / placeholder */}
               <div className="flex-1">
                 {activeCellId && questionLoading ? (
-                  <div className="question-card bg-slate-800 rounded-2xl p-5 flex items-center justify-center">
-                    <div className="w-6 h-6 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                  <div className="question-card rounded-2xl p-5 flex items-center justify-center" style={{ background: 'var(--surface)', border: '1px solid var(--border-gold)' }}>
+                    <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--gold)', borderTopColor: 'transparent' }} />
                   </div>
                 ) : activeCellId && (question || questionError || nextQMutation.error) ? (
                   (questionError || nextQMutation.error) ? (
-                    <div className="question-card bg-slate-800 rounded-2xl p-5 flex flex-col gap-4 w-full">
-                      <div className="bg-red-900/50 border border-red-600 rounded-xl p-3 text-red-300 text-sm text-center">
+                    <div className="question-card rounded-2xl p-5 flex flex-col gap-4 w-full" style={{ background: 'var(--surface)', border: '1px solid var(--border-gold)' }}>
+                      <div className="rounded-xl p-3 text-sm text-center font-arabic" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }}>
                         {extractApiError(questionError ?? nextQMutation.error)}
                       </div>
                       <button
                         onClick={() => nextQMutation.mutate()}
                         disabled={nextQMutation.isPending}
-                        className="w-full py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm transition-colors disabled:opacity-50"
+                        className="w-full py-2 rounded-xl text-sm font-arabic transition-all hover:brightness-110 disabled:opacity-50"
+                        style={{ background: 'var(--elevated)', color: 'var(--cream-2)', border: '1px solid var(--border-gold)' }}
                       >
                         سؤال آخر
                       </button>
@@ -657,7 +695,10 @@ export function HostDashboard() {
                     />
                   )
                 ) : (
-                  <div className="letter-placeholder bg-slate-700/50 rounded-2xl p-5 text-slate-500 text-center text-sm">
+                  <div
+                    className="letter-placeholder rounded-2xl p-5 text-center text-sm font-arabic"
+                    style={{ background: 'rgba(201,168,76,0.05)', border: '1px dashed rgba(201,168,76,0.2)', color: 'var(--cream-2)' }}
+                  >
                     اختر حرفاً من الشبكة
                   </div>
                 )}
@@ -667,17 +708,25 @@ export function HostDashboard() {
             /* Players list */
             <div className="flex-1 flex flex-col gap-2">
               {players.length === 0 ? (
-                <div className="bg-slate-700/50 rounded-2xl p-5 text-slate-500 text-center text-sm">
+                <div
+                  className="rounded-2xl p-5 text-center text-sm font-arabic"
+                  style={{ background: 'rgba(201,168,76,0.05)', border: '1px dashed rgba(201,168,76,0.2)', color: 'var(--cream-2)' }}
+                >
                   لا يوجد لاعبون متصلون
                 </div>
               ) : (
                 players.map((name, i) => (
-                  <div key={i} className="flex items-center gap-3 bg-slate-700/50 rounded-xl px-4 py-2.5">
-                    <div className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
-                    <span className="text-white font-bold text-sm flex-1">{name}</span>
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 rounded-xl px-4 py-2.5"
+                    style={{ background: 'var(--elevated)', border: '1px solid rgba(201,168,76,0.1)' }}
+                  >
+                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: '#4ade80', boxShadow: '0 0 6px #4ade80' }} />
+                    <span className="font-bold text-sm font-arabic flex-1" style={{ color: 'var(--cream)' }}>{name}</span>
                     <button
                       onClick={() => kickPlayer(name)}
-                      className="text-slate-500 hover:text-red-400 text-base leading-none transition-colors flex-shrink-0"
+                      className="text-base leading-none transition-all flex-shrink-0 hover:brightness-125"
+                      style={{ color: 'var(--muted)' }}
                       aria-label="إزالة اللاعب"
                     >
                       ✕
@@ -694,25 +743,27 @@ export function HostDashboard() {
           {/* Timer settings */}
           <div className="flex gap-2">
             <div className="flex-1 flex flex-col gap-1">
-              <label className="text-slate-500 text-xs text-center">وقت الطارئ (ث)</label>
+              <label className="text-xs text-center font-arabic" style={{ color: 'var(--cream-2)' }}>وقت الطارئ (ث)</label>
               <input
                 type="number"
                 min={0}
                 value={timerBuzzer || ''}
                 onChange={e => setTimerBuzzer(Math.max(0, Number(e.target.value) || 0))}
                 placeholder="0"
-                className="w-full px-2 py-2 rounded-xl bg-slate-700 text-white text-center text-sm border border-slate-600 focus:border-amber-400 focus:outline-none"
+                className="w-full px-2 py-2 rounded-xl text-center text-sm font-arabic outline-none transition-all"
+                style={{ background: 'var(--elevated)', color: 'var(--cream)', border: '1px solid var(--border-gold)' }}
               />
             </div>
             <div className="flex-1 flex flex-col gap-1">
-              <label className="text-slate-500 text-xs text-center">وقت الفريق (ث)</label>
+              <label className="text-xs text-center font-arabic" style={{ color: 'var(--cream-2)' }}>وقت الفريق (ث)</label>
               <input
                 type="number"
                 min={0}
                 value={timerThink || ''}
                 onChange={e => setTimerThink(Math.max(0, Number(e.target.value) || 0))}
                 placeholder="0"
-                className="w-full px-2 py-2 rounded-xl bg-slate-700 text-white text-center text-sm border border-slate-600 focus:border-amber-400 focus:outline-none"
+                className="w-full px-2 py-2 rounded-xl text-center text-sm font-arabic outline-none transition-all"
+                style={{ background: 'var(--elevated)', color: 'var(--cream)', border: '1px solid var(--border-gold)' }}
               />
             </div>
           </div>
@@ -721,17 +772,19 @@ export function HostDashboard() {
           <div className="flex flex-col gap-2">
             <button
               onClick={() => copyToClipboard(`/tv/${session.roomCode}`, setCopiedTv)}
-              className="copy-btn w-full px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-sm font-bold transition-colors flex items-center justify-between"
+              className="copy-btn w-full px-4 py-2.5 rounded-xl text-sm font-bold font-arabic transition-all hover:brightness-110 flex items-center justify-between"
+              style={{ background: 'var(--elevated)', border: '1px solid var(--border-gold)' }}
             >
-              <span className="text-slate-300">رابط الشاشة</span>
-              <span style={{ color: copiedTv ? '#4ade80' : '#f59e0b' }}>{copiedTv ? '✓ تم النسخ' : 'نسخ'}</span>
+              <span style={{ color: 'var(--cream-2)' }}>رابط الشاشة</span>
+              <span style={{ color: copiedTv ? '#4ade80' : 'var(--gold)' }}>{copiedTv ? '✓ تم النسخ' : 'نسخ'}</span>
             </button>
             <button
               onClick={() => copyToClipboard(`/play/${session.roomCode}`, setCopiedPlayer)}
-              className="copy-btn w-full px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-sm font-bold transition-colors flex items-center justify-between"
+              className="copy-btn w-full px-4 py-2.5 rounded-xl text-sm font-bold font-arabic transition-all hover:brightness-110 flex items-center justify-between"
+              style={{ background: 'var(--elevated)', border: '1px solid var(--border-gold)' }}
             >
-              <span className="text-slate-300">رابط اللاعبين</span>
-              <span style={{ color: copiedPlayer ? '#4ade80' : '#f59e0b' }}>{copiedPlayer ? '✓ تم النسخ' : 'نسخ'}</span>
+              <span style={{ color: 'var(--cream-2)' }}>رابط اللاعبين</span>
+              <span style={{ color: copiedPlayer ? '#4ade80' : 'var(--gold)' }}>{copiedPlayer ? '✓ تم النسخ' : 'نسخ'}</span>
             </button>
           </div>
 
@@ -739,7 +792,8 @@ export function HostDashboard() {
           <button
             onClick={() => setShowEndConfirm(true)}
             disabled={endMutation.isPending}
-            className="w-full py-2.5 rounded-xl bg-red-900/50 hover:bg-red-800 text-red-400 text-sm font-bold transition-colors disabled:opacity-50"
+            className="w-full py-2.5 rounded-xl text-sm font-bold font-arabic transition-all hover:brightness-110 disabled:opacity-50"
+            style={{ background: 'rgba(239,68,68,0.12)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' }}
           >
             إنهاء اللعبة
           </button>
@@ -748,13 +802,28 @@ export function HostDashboard() {
         {/* ── Part 2: Grid (~78%) ── */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {/* Top strip — team 1 + room code */}
-          <div className="host-strip" style={{ minHeight: 48, backgroundColor: session.team1Color, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, paddingTop: 'env(safe-area-inset-top, 0px)', paddingLeft: 'env(safe-area-inset-left, 0px)', paddingRight: 'env(safe-area-inset-right, 0px)' }}>
-            <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: 700 }}>رمز الغرفة</span>
-            <span style={{ color: '#fff', fontSize: 20, fontWeight: 900, letterSpacing: '0.15em' }}>{session.roomCode}</span>
+          <div
+            className="host-strip"
+            style={{
+              minHeight: 48,
+              background: `linear-gradient(90deg, ${session.team1Color}CC, ${session.team1Color}AA)`,
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              paddingTop: 'env(safe-area-inset-top, 0px)',
+              paddingLeft: 'env(safe-area-inset-left, 0px)',
+              paddingRight: 'env(safe-area-inset-right, 0px)',
+              boxShadow: `0 2px 12px ${session.team1Color}44`,
+            }}
+          >
+            <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: 700, fontFamily: "'Cairo', sans-serif" }}>رمز الغرفة</span>
+            <span style={{ color: '#fff', fontSize: 20, fontWeight: 900, letterSpacing: '0.15em', fontFamily: "'Cairo', sans-serif" }}>{session.roomCode}</span>
           </div>
 
           {/* Grid area */}
-          <div ref={setGridContainer} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', backgroundColor: '#0f172a' }}>
+          <div ref={setGridContainer} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', backgroundColor: 'var(--void)' }}>
             <HexGrid
               cells={cells}
               gridSize={session.gridSize}
@@ -768,7 +837,15 @@ export function HostDashboard() {
           </div>
 
           {/* Bottom strip — team 2 */}
-          <div className="host-strip" style={{ height: 48, backgroundColor: session.team2Color, flexShrink: 0 }} />
+          <div
+            className="host-strip"
+            style={{
+              height: 48,
+              background: `linear-gradient(90deg, ${session.team2Color}CC, ${session.team2Color}AA)`,
+              flexShrink: 0,
+              boxShadow: `0 -2px 12px ${session.team2Color}44`,
+            }}
+          />
         </div>
       </div>
       )}

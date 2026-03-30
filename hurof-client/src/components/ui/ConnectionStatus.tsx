@@ -6,24 +6,25 @@ interface ConnectionStatusProps {
 
 export function ConnectionStatus({ state }: ConnectionStatusProps) {
   const config = {
-    Connected:    { color: '#4ade80', label: 'متصل',         dot: false },
-    Reconnecting: { color: '#f59e0b', label: 'إعادة اتصال', dot: true  },
-    Disconnected: { color: '#f87171', label: 'غير متصل',    dot: false },
+    Connected:    { color: '#4ade80', label: 'متصل',         pulse: false },
+    Reconnecting: { color: '#C9A84C', label: 'إعادة اتصال', pulse: true  },
+    Disconnected: { color: '#f87171', label: 'غير متصل',    pulse: false },
   }[state];
 
   return (
     <div className="flex items-center gap-1.5">
       <div
         style={{
-          width: 8,
-          height: 8,
+          width: 7,
+          height: 7,
           borderRadius: '50%',
           backgroundColor: config.color,
-          animation: config.dot ? 'pulse-win 1s ease-in-out infinite' : undefined,
+          boxShadow: `0 0 6px ${config.color}`,
+          animation: config.pulse ? 'pulse-win 1s ease-in-out infinite' : undefined,
           flexShrink: 0,
         }}
       />
-      <span style={{ color: config.color, fontSize: '0.7rem', fontWeight: 600 }}>
+      <span style={{ color: config.color, fontSize: '0.68rem', fontWeight: 600, fontFamily: "'Cairo', sans-serif" }}>
         {config.label}
       </span>
     </div>

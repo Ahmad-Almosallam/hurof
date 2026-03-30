@@ -1,12 +1,12 @@
 import type { LetterCellResponse } from '../../types/api';
 import { HexCell } from './HexCell';
 
-const HEX_W = 110;
-const HEX_H = HEX_W * 1.1547;
-const HEX_GAP = 0;
+const HEX_W        = 110;
+const HEX_H        = HEX_W * 1.1547;
+const HEX_GAP      = 0;
 const HEX_ROW_STEP = HEX_H * 0.75 - 1;
-const EDGE_SIZE = 12;
-const EDGE_GAP = 6;
+const EDGE_SIZE    = 12;
+const EDGE_GAP     = 6;
 
 interface HexGridProps {
   cells: LetterCellResponse[];
@@ -30,9 +30,9 @@ export function HexGrid({
   scale = 1,
 }: HexGridProps) {
   const gridHeight = HEX_ROW_STEP * gridSize + (HEX_H - HEX_ROW_STEP);
-  const gridWidth = gridSize * (HEX_W + HEX_GAP) + HEX_W / 2 + HEX_GAP;
+  const gridWidth  = gridSize * (HEX_W + HEX_GAP) + HEX_W / 2 + HEX_GAP;
 
-  const totalWidth = gridWidth + (EDGE_SIZE + EDGE_GAP) * 2;
+  const totalWidth  = gridWidth  + (EDGE_SIZE + EDGE_GAP) * 2;
   const totalHeight = gridHeight + (EDGE_SIZE + EDGE_GAP) * 2;
 
   const rows = Array.from({ length: gridSize }, (_, r) =>
@@ -45,63 +45,45 @@ export function HexGrid({
     <div style={{ width: totalWidth * scale, height: totalHeight * scale, position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
       <div style={{ position: 'absolute', top: 0, left: 0, width: totalWidth, height: totalHeight, transform: scale !== 1 ? `scale(${scale})` : undefined, transformOrigin: '0 0' }}>
 
-        {/* Team 1 — Top edge */}
+        {/* Team 1 — Top edge (with glow) */}
         <div style={{
-          position: 'absolute',
-          top: 0,
-          right: edgeOffset,
-          width: gridWidth,
-          height: EDGE_SIZE,
+          position: 'absolute', top: 0, right: edgeOffset,
+          width: gridWidth, height: EDGE_SIZE,
           backgroundColor: team1Color,
-          borderRadius: 6,
-          opacity: 0.85,
+          borderRadius: 6, opacity: 0.9,
+          boxShadow: `0 0 12px ${team1Color}88`,
         }} />
-
         {/* Team 1 — Bottom edge */}
         <div style={{
-          position: 'absolute',
-          bottom: 0,
-          right: edgeOffset,
-          width: gridWidth,
-          height: EDGE_SIZE,
+          position: 'absolute', bottom: 0, right: edgeOffset,
+          width: gridWidth, height: EDGE_SIZE,
           backgroundColor: team1Color,
-          borderRadius: 6,
-          opacity: 0.85,
+          borderRadius: 6, opacity: 0.9,
+          boxShadow: `0 0 12px ${team1Color}88`,
         }} />
-
-        {/* Team 2 — Right edge (col 0 side in RTL) */}
+        {/* Team 2 — Right edge */}
         <div style={{
-          position: 'absolute',
-          top: edgeOffset,
-          right: 0,
-          width: EDGE_SIZE,
-          height: gridHeight,
+          position: 'absolute', top: edgeOffset, right: 0,
+          width: EDGE_SIZE, height: gridHeight,
           backgroundColor: team2Color,
-          borderRadius: 6,
-          opacity: 0.85,
+          borderRadius: 6, opacity: 0.9,
+          boxShadow: `0 0 12px ${team2Color}88`,
         }} />
-
-        {/* Team 2 — Left edge (col gridSize-1 side in RTL) */}
+        {/* Team 2 — Left edge */}
         <div style={{
-          position: 'absolute',
-          top: edgeOffset,
-          left: 0,
-          width: EDGE_SIZE,
-          height: gridHeight,
+          position: 'absolute', top: edgeOffset, left: 0,
+          width: EDGE_SIZE, height: gridHeight,
           backgroundColor: team2Color,
-          borderRadius: 6,
-          opacity: 0.85,
+          borderRadius: 6, opacity: 0.9,
+          boxShadow: `0 0 12px ${team2Color}88`,
         }} />
 
         {/* Cell area background */}
         <div style={{
-          position: 'absolute',
-          top: edgeOffset,
-          right: edgeOffset,
-          width: gridWidth,
-          height: gridHeight,
+          position: 'absolute', top: edgeOffset, right: edgeOffset,
+          width: gridWidth, height: gridHeight,
           background: `conic-gradient(from -45deg, ${team1Color} 0deg 90deg, ${team2Color} 90deg 180deg, ${team1Color} 180deg 270deg, ${team2Color} 270deg 360deg)`,
-          opacity: 0.25,
+          opacity: 0.12,
           borderRadius: 4,
         }} />
 

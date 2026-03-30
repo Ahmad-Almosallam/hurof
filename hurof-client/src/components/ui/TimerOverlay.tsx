@@ -5,48 +5,41 @@ interface Props {
 }
 
 export function TimerOverlay({ secondsLeft, totalSeconds, phase }: Props) {
-  const radius = 54;
+  const radius       = 54;
   const circumference = 2 * Math.PI * radius;
-  const progress = totalSeconds > 0 ? secondsLeft / totalSeconds : 0;
-  const dashOffset = circumference * (1 - progress);
+  const progress     = totalSeconds > 0 ? secondsLeft / totalSeconds : 0;
+  const dashOffset   = circumference * (1 - progress);
 
-  const isLow = secondsLeft <= 5;
-  const color = isLow ? '#ef4444' : phase === 1 ? '#f59e0b' : '#60a5fa';
-  const label = phase === 1 ? 'وقت الطارئ' : 'وقت الفريق';
+  const isLow  = secondsLeft <= 5;
+  const color  = isLow ? '#f87171' : phase === 1 ? '#C9A84C' : '#7DAFE8';
+  const label  = phase === 1 ? 'وقت الطارئ' : 'وقت الفريق';
 
   return (
     <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-2 pointer-events-none">
       <div
-        className="flex flex-col items-center justify-center rounded-full shadow-2xl"
+        className="flex flex-col items-center justify-center rounded-full"
         style={{
           width: 140,
           height: 140,
-          background: 'rgba(15, 23, 42, 0.9)',
-          border: `3px solid ${color}33`,
+          background: 'rgba(7, 9, 15, 0.92)',
+          border: `1px solid ${color}33`,
+          boxShadow: `0 0 30px rgba(7,9,15,0.8), 0 0 20px ${color}22`,
+          backdropFilter: 'blur(8px)',
+          position: 'relative',
         }}
       >
         {/* SVG progress ring */}
         <svg
           width={140}
           height={140}
-          className="absolute"
-          style={{ transform: 'rotate(-90deg)' }}
+          style={{ position: 'absolute', transform: 'rotate(-90deg)' }}
         >
+          <circle cx={70} cy={70} r={radius} fill="none" stroke={`${color}18`} strokeWidth={7} />
           <circle
-            cx={70}
-            cy={70}
-            r={radius}
-            fill="none"
-            stroke={`${color}22`}
-            strokeWidth={8}
-          />
-          <circle
-            cx={70}
-            cy={70}
-            r={radius}
+            cx={70} cy={70} r={radius}
             fill="none"
             stroke={color}
-            strokeWidth={8}
+            strokeWidth={7}
             strokeDasharray={circumference}
             strokeDashoffset={dashOffset}
             strokeLinecap="round"
@@ -54,10 +47,10 @@ export function TimerOverlay({ secondsLeft, totalSeconds, phase }: Props) {
           />
         </svg>
 
-        {/* Countdown number */}
+        {/* Countdown */}
         <span
           className="font-black text-5xl relative z-10"
-          style={{ color, lineHeight: 1 }}
+          style={{ color, lineHeight: 1, fontFamily: "'Cairo', sans-serif" }}
         >
           {secondsLeft}
         </span>
@@ -65,8 +58,13 @@ export function TimerOverlay({ secondsLeft, totalSeconds, phase }: Props) {
 
       {/* Phase label */}
       <span
-        className="text-sm font-bold px-3 py-1 rounded-full"
-        style={{ color, background: `${color}22` }}
+        className="text-sm font-bold px-3 py-1 rounded-full font-arabic"
+        style={{
+          color,
+          background: `${color}18`,
+          border: `1px solid ${color}30`,
+          backdropFilter: 'blur(4px)',
+        }}
       >
         {label}
       </span>

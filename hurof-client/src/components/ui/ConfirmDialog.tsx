@@ -16,23 +16,32 @@ export function ConfirmDialog({
   danger = false,
 }: Props) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-sm mx-4 flex flex-col gap-5 shadow-2xl">
-        <p className="text-white text-center text-lg font-bold leading-relaxed">{message}</p>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
+      style={{ background: 'rgba(7,9,15,0.75)' }}
+    >
+      <div
+        className="w-full max-w-sm mx-4 flex flex-col gap-5 rounded-2xl p-6 shadow-2xl"
+        style={{ background: 'var(--surface)', border: '1px solid var(--border-gold)' }}
+      >
+        <p className="text-center text-lg font-bold leading-relaxed font-arabic" style={{ color: 'var(--cream)' }}>
+          {message}
+        </p>
         <div className="flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold transition-colors"
+            className="flex-1 py-3 rounded-xl font-bold font-arabic transition-all hover:brightness-110"
+            style={{ background: 'var(--elevated)', color: 'var(--cream-2)', border: '1px solid var(--border-gold)' }}
           >
             {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
-            className={`flex-1 py-3 rounded-xl font-bold transition-colors ${
-              danger
-                ? 'bg-red-600 hover:bg-red-500 text-white'
-                : 'bg-amber-500 hover:bg-amber-400 text-slate-900'
-            }`}
+            className="flex-1 py-3 rounded-xl font-bold font-arabic transition-all hover:brightness-110"
+            style={danger
+              ? { background: 'rgba(239,68,68,0.15)', color: '#f87171', border: '1px solid rgba(239,68,68,0.35)' }
+              : { background: 'linear-gradient(135deg, var(--gold-dim), var(--gold))', color: '#07090F', boxShadow: '0 3px 14px var(--gold-glow)' }
+            }
           >
             {confirmLabel}
           </button>

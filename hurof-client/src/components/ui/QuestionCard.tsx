@@ -11,6 +11,12 @@ interface QuestionCardProps {
   compact?: boolean;
 }
 
+const cardStyle = {
+  background: 'var(--surface)',
+  border: '1px solid var(--border-gold)',
+  borderRadius: '0.75rem',
+};
+
 export function QuestionCard({
   question,
   onNextQuestion,
@@ -23,39 +29,58 @@ export function QuestionCard({
 }: QuestionCardProps) {
   if (compact) {
     return (
-      <div className="question-card bg-slate-800 rounded-xl p-2 flex flex-col gap-1.5 w-full">
+      <div className="question-card flex flex-col gap-1.5 w-full" style={{ ...cardStyle, padding: '0.5rem' }}>
         <div className="flex items-center justify-between">
-          <span className="text-slate-400 text-xs">
+          <span className="text-xs font-arabic" style={{ color: 'var(--cream-2)' }}>
             سؤال {question.questionIndex + 1} / {question.totalQuestions}
           </span>
-          <span className="text-base font-bold text-amber-400">{question.letter}</span>
+          <span
+            className="text-base font-bold"
+            style={{ fontFamily: "'Amiri', serif", color: 'var(--gold-2)' }}
+          >
+            {question.letter}
+          </span>
         </div>
 
-        <p className="text-xs font-semibold leading-snug line-clamp-2">{question.questionText}</p>
+        <p className="text-xs font-semibold leading-snug line-clamp-2 font-arabic" style={{ color: 'var(--cream)' }}>
+          {question.questionText}
+        </p>
 
-        <div className="bg-green-900/50 border border-green-600 rounded-lg px-2 py-1 text-green-300 font-bold text-center text-xs">
+        <div
+          className="rounded-lg px-2 py-1 font-bold text-center text-xs font-arabic"
+          style={{
+            background: 'rgba(74,222,128,0.1)',
+            border: '1px solid rgba(74,222,128,0.3)',
+            color: '#86efac',
+          }}
+        >
           {question.answer}
         </div>
 
         <div className="flex gap-1.5">
           <button
             onClick={onAssignTeam1}
-            className="flex-1 py-1 rounded-lg font-bold text-white text-xs"
-            style={{ backgroundColor: team1Color }}
+            className="flex-1 py-1 rounded-lg font-bold text-white text-xs font-arabic transition-all hover:brightness-110"
+            style={{ backgroundColor: team1Color, boxShadow: `0 2px 8px ${team1Color}44` }}
           >
             فريق ١
           </button>
           <button
             onClick={onAssignTeam2}
-            className="flex-1 py-1 rounded-lg font-bold text-white text-xs"
-            style={{ backgroundColor: team2Color }}
+            className="flex-1 py-1 rounded-lg font-bold text-white text-xs font-arabic transition-all hover:brightness-110"
+            style={{ backgroundColor: team2Color, boxShadow: `0 2px 8px ${team2Color}44` }}
           >
             فريق ٢
           </button>
           <button
             onClick={onNextQuestion}
             disabled={isLoading}
-            className="flex-1 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs transition-colors disabled:opacity-50"
+            className="flex-1 py-1 rounded-lg text-xs font-arabic transition-all disabled:opacity-50"
+            style={{
+              background: 'var(--elevated)',
+              color: 'var(--cream-2)',
+              border: '1px solid var(--border-gold)',
+            }}
           >
             سؤال آخر
           </button>
@@ -65,32 +90,46 @@ export function QuestionCard({
   }
 
   return (
-    <div className="question-card bg-slate-800 rounded-2xl p-5 flex flex-col gap-4 w-full">
+    <div className="question-card flex flex-col gap-4 w-full" style={{ ...cardStyle, padding: '1.25rem' }}>
       <div className="flex items-center justify-between">
-        <span className="text-slate-400 text-sm">
+        <span className="text-sm font-arabic" style={{ color: 'var(--cream-2)' }}>
           سؤال {question.questionIndex + 1} / {question.totalQuestions}
         </span>
-        <span className="text-2xl font-bold text-amber-400">{question.letter}</span>
+        <span
+          className="text-2xl font-bold"
+          style={{ fontFamily: "'Amiri', serif", color: 'var(--gold-2)' }}
+        >
+          {question.letter}
+        </span>
       </div>
 
-      <p className="text-lg font-semibold leading-relaxed">{question.questionText}</p>
+      <p className="text-lg font-semibold leading-relaxed font-arabic" style={{ color: 'var(--cream)' }}>
+        {question.questionText}
+      </p>
 
-      <div className="bg-green-900/50 border border-green-600 rounded-xl p-3 text-green-300 font-bold text-center">
+      <div
+        className="rounded-xl p-3 font-bold text-center font-arabic"
+        style={{
+          background: 'rgba(74,222,128,0.08)',
+          border: '1px solid rgba(74,222,128,0.28)',
+          color: '#86efac',
+        }}
+      >
         {question.answer}
       </div>
 
       <div className="flex gap-2">
         <button
           onClick={onAssignTeam1}
-          className="flex-1 py-2 rounded-xl font-bold text-white text-sm"
-          style={{ backgroundColor: team1Color }}
+          className="flex-1 py-2 rounded-xl font-bold text-white text-sm font-arabic transition-all hover:brightness-110"
+          style={{ backgroundColor: team1Color, boxShadow: `0 3px 12px ${team1Color}44` }}
         >
           فريق ١
         </button>
         <button
           onClick={onAssignTeam2}
-          className="flex-1 py-2 rounded-xl font-bold text-white text-sm"
-          style={{ backgroundColor: team2Color }}
+          className="flex-1 py-2 rounded-xl font-bold text-white text-sm font-arabic transition-all hover:brightness-110"
+          style={{ backgroundColor: team2Color, boxShadow: `0 3px 12px ${team2Color}44` }}
         >
           فريق ٢
         </button>
@@ -99,7 +138,12 @@ export function QuestionCard({
       <button
         onClick={onNextQuestion}
         disabled={isLoading}
-        className="w-full py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm transition-colors disabled:opacity-50"
+        className="w-full py-2 rounded-xl text-sm font-arabic transition-all disabled:opacity-50"
+        style={{
+          background: 'var(--elevated)',
+          color: 'var(--cream-2)',
+          border: '1px solid var(--border-gold)',
+        }}
       >
         سؤال آخر
       </button>
