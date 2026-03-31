@@ -137,13 +137,6 @@ export function TvDisplayPage() {
           paddingRight:  'calc(1rem + env(safe-area-inset-right, 0px))',
         }}>
           <div className="flex items-center gap-2.5">
-            <button
-              onClick={() => navigate('/')}
-              className="text-sm font-bold font-arabic px-2.5 py-1.5 rounded-xl transition-all hover:brightness-125"
-              style={{ color: 'rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}
-            >
-              ← رجوع
-            </button>
             <TeamScoreBadge label="فريق ١" score={team1Score} color={session.team1Color} />
           </div>
 
@@ -215,6 +208,30 @@ export function TvDisplayPage() {
           team2Color={session.team2Color}
         />
       )}
+      {connectionState === 'Disconnected' && (
+        <div
+          className="fixed inset-0 flex flex-col items-center justify-center z-50 gap-4"
+          style={{ background: 'rgba(2,2,3,0.88)', backdropFilter: 'blur(12px)' }}
+        >
+          <div
+            style={{
+              width: 48, height: 48, borderRadius: '50%',
+              border: '4px solid rgba(201,168,76,0.25)',
+              borderTopColor: 'var(--gold)',
+              animation: 'spin 1s linear infinite',
+            }}
+            aria-hidden="true"
+          />
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          <div
+            className="font-bold font-arabic"
+            style={{ fontSize: 'clamp(1.5rem, 5vw, 2.5rem)', color: 'var(--cream)', textAlign: 'center' }}
+          >
+            جارٍ إعادة الاتصال...
+          </div>
+        </div>
+      )}
+
       {sessionEndedCountdown !== null && (
         <div
           className="fixed inset-0 flex flex-col items-center justify-center z-50 gap-4"

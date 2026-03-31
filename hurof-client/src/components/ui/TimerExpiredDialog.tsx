@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { QuestionResponse } from '../../types/api';
 
 interface Props {
@@ -11,6 +12,8 @@ interface Props {
 }
 
 export function TimerExpiredDialog({ question, onStartPhase2, onResetBuzzer, onAssignTeam1, onAssignTeam2, team1Color, team2Color }: Props) {
+  const [showAnswer, setShowAnswer] = useState(false);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
@@ -34,12 +37,27 @@ export function TimerExpiredDialog({ question, onStartPhase2, onResetBuzzer, onA
             <p className="text-sm font-semibold leading-relaxed text-center font-arabic" style={{ color: 'var(--cream)' }}>
               {question.questionText}
             </p>
-            <div
-              className="rounded-xl p-3 font-bold text-center text-sm font-arabic"
-              style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.28)', color: '#86efac' }}
-            >
-              {question.answer}
-            </div>
+            {showAnswer ? (
+              <div
+                className="rounded-xl p-3 font-bold text-center text-sm font-arabic cursor-pointer"
+                style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.28)', color: '#86efac' }}
+                onClick={() => setShowAnswer(false)}
+              >
+                {question.answer}
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAnswer(true)}
+                className="w-full rounded-xl p-3 font-bold text-center text-sm font-arabic transition-all hover:brightness-110"
+                style={{
+                  background: 'rgba(74,222,128,0.04)',
+                  border: '1px dashed rgba(74,222,128,0.2)',
+                  color: 'rgba(134,239,172,0.45)',
+                }}
+              >
+                اكشف الجواب
+              </button>
+            )}
           </div>
         )}
 
@@ -70,7 +88,7 @@ export function TimerExpiredDialog({ question, onStartPhase2, onResetBuzzer, onA
               boxShadow: '0 3px 16px var(--gold-glow)',
             }}
           >
-            ابدأ وقت الفريق الآخر
+            ابدأ وقت التفكير ⏱
           </button>
           <button
             onClick={onResetBuzzer}

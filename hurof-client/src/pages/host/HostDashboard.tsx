@@ -8,6 +8,7 @@ import { QuestionCard } from '../../components/ui/QuestionCard';
 import { SplashScreen } from '../../components/ui/SplashScreen';
 import { GameOverBanner } from '../../components/ui/GameOverBanner';
 import { EndGameDialog } from '../../components/ui/EndGameDialog';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { TimerExpiredDialog } from '../../components/ui/TimerExpiredDialog';
 import { ConnectionStatus } from '../../components/ui/ConnectionStatus';
 import { MobileSettingsSheet } from '../../components/ui/MobileSettingsSheet';
@@ -287,8 +288,10 @@ export function HostDashboard() {
     if (!session) return;
     if (cell.state === 'Unselected') {
       stateMutation.mutate({ cellId: cell.id, state: 'Active' });
-    } else if (cell.state === 'AssignedTeam1' || cell.state === 'AssignedTeam2') {
+    } else if (cell.state === 'Active') {
       stateMutation.mutate({ cellId: cell.id, state: 'Unselected' });
+    } else if (cell.state === 'AssignedTeam1' || cell.state === 'AssignedTeam2') {
+      setPendingUnassignCell(cell);
     }
   };
 
@@ -326,6 +329,7 @@ export function HostDashboard() {
   const [copiedTv, setCopiedTv] = useState(false);
   const [copiedPlayer, setCopiedPlayer] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [pendingUnassignCell, setPendingUnassignCell] = useState<LetterCellResponse | null>(null);
 
   // Mobile layout
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
@@ -754,7 +758,7 @@ export function HostDashboard() {
           {/* Timer settings */}
           <div className="flex gap-2">
             <div className="flex-1 flex flex-col gap-1">
-              <label className="text-xs text-center font-arabic" style={{ color: 'var(--cream-2)' }}>وقت الطارئ (ث)</label>
+              <label className="text-xs text-center font-arabic" style={{ color: 'var(--cream-2)' }}>وقت الضغط (ث)</label>
               <input
                 type="number"
                 min={0}
@@ -766,7 +770,7 @@ export function HostDashboard() {
               />
             </div>
             <div className="flex-1 flex flex-col gap-1">
-              <label className="text-xs text-center font-arabic" style={{ color: 'var(--cream-2)' }}>وقت الفريق (ث)</label>
+              <label className="text-xs text-center font-arabic" style={{ color: 'var(--cream-2)' }}>وقت التفكير (ث)</label>
               <input
                 type="number"
                 min={0}
@@ -890,6 +894,19 @@ export function HostDashboard() {
           onAssignTeam2={() => { handleAssign(2); setShowTimerExpired(false); }}
           team1Color={session.team1Color}
           team2Color={session.team2Color}
+        />
+      )}
+
+      {pendingUnassignCell && (
+        <ConfirmDialog
+          message={`إلغاء تعيين الحرف "${pendingUnassignCell.letter}"؟`}
+          confirmLabel="إلغاء التعيين"
+          cancelLabel="رجوع"
+          onConfirm={() => {
+            stateMutation.mutate({ cellId: pendingUnassignCell.id, state: 'Unselected' });
+            setPendingUnassignCell(null);
+          }}
+          onCancel={() => setPendingUnassignCell(null)}
         />
       )}
 

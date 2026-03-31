@@ -158,7 +158,7 @@ export function BuzzBanner({ playerName, onReset, showReset, timerSecondsLeft, t
               letterSpacing: '0.06em',
             }}
           >
-            {timerPhase === 1 ? 'وقت الطارئ' : 'وقت الفريق'}
+            {timerPhase === 1 ? 'وقت الضغط' : 'وقت التفكير'}
           </span>
         </div>
       )}
