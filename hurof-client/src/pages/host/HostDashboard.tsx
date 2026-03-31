@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Ban } from 'lucide-react';
 import { RtlWrapper } from '../../components/layout/RtlWrapper';
 import { HexGrid } from '../../components/hex/HexGrid';
 import { QuestionCard } from '../../components/ui/QuestionCard';
@@ -366,9 +367,9 @@ export function HostDashboard() {
   // --- Host slot taken error ---
   if (hostTakenError) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--void)' }}>
-        <div className="text-center flex flex-col gap-4">
-          <div className="text-4xl">🚫</div>
+      <div className="min-h-dvh flex items-center justify-center p-4" style={{ background: 'var(--void)' }}>
+        <div className="text-center flex flex-col items-center gap-4">
+          <Ban size={48} style={{ color: '#f87171' }} aria-hidden="true" />
           <p className="font-bold text-lg" style={{ color: '#f87171' }}>{hostTakenError}</p>
           <p className="text-sm font-arabic" style={{ color: 'var(--cream-2)' }}>سيتم توجيهك للصفحة الرئيسية...</p>
         </div>
@@ -379,8 +380,18 @@ export function HostDashboard() {
   // --- Rejoin loading state ---
   if (rejoinRoomCode && !session && !rejoinError) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--void)' }}>
-        <div className="font-arabic" style={{ color: 'var(--cream-2)' }}>جارٍ تحميل الجلسة...</div>
+      <div className="min-h-dvh flex items-center justify-center" style={{ background: 'var(--void)' }}>
+        <div
+          style={{
+            width: 36, height: 36, borderRadius: '50%',
+            border: '3px solid rgba(201,168,76,0.2)',
+            borderTopColor: 'var(--gold)',
+            animation: 'spin 1s linear infinite',
+          }}
+          role="status"
+          aria-label="جارٍ تحميل الجلسة"
+        />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
@@ -389,7 +400,7 @@ export function HostDashboard() {
   if (!session) {
     return (
       <RtlWrapper>
-        <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--void)' }}>
+        <div className="min-h-dvh flex items-center justify-center p-4" style={{ background: 'var(--void)' }}>
           <button
             onClick={() => navigate('/')}
             className="absolute top-4 right-4 px-4 py-2 rounded-xl text-sm font-bold font-arabic transition-all hover:brightness-110"

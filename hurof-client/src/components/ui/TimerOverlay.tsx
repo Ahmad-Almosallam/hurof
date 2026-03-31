@@ -49,8 +49,9 @@ export function TimerOverlay({ secondsLeft, totalSeconds, phase }: Props) {
 
         {/* Countdown */}
         <span
-          className="font-black text-5xl relative z-10"
+          className="font-black text-5xl relative z-10 timer-num"
           style={{ color, lineHeight: 1, fontFamily: "'Cairo', sans-serif" }}
+          aria-live="off"
         >
           {secondsLeft}
         </span>

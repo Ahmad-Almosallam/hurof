@@ -99,8 +99,18 @@ export function TvDisplayPage() {
 
   if (!session) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--void)' }}>
-        <div className="font-arabic text-xl" style={{ color: 'var(--cream-2)' }}>جارٍ التحميل...</div>
+      <div className="min-h-dvh flex items-center justify-center" style={{ background: 'var(--void)' }}>
+        <div
+          style={{
+            width: 40, height: 40, borderRadius: '50%',
+            border: '3px solid rgba(201,168,76,0.2)',
+            borderTopColor: 'var(--gold)',
+            animation: 'spin 1s linear infinite',
+          }}
+          role="status"
+          aria-label="جارٍ التحميل"
+        />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
@@ -117,19 +127,20 @@ export function TvDisplayPage() {
           alignItems: 'center',
           justifyContent: 'space-between',
           flexShrink: 0,
-          background: 'rgba(14,21,32,0.92)',
-          backdropFilter: 'blur(8px)',
-          borderBottom: '1px solid rgba(201,168,76,0.14)',
-          paddingTop:    'calc(0.5rem + env(safe-area-inset-top, 0px))',
-          paddingBottom: '0.5rem',
-          paddingLeft:   'calc(1.25rem + env(safe-area-inset-left, 0px))',
-          paddingRight:  'calc(1.25rem + env(safe-area-inset-right, 0px))',
+          background: 'rgba(2,2,3,0.88)',
+          backdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          boxShadow: '0 1px 0 rgba(201,168,76,0.08)',
+          paddingTop:    'calc(0.6rem + env(safe-area-inset-top, 0px))',
+          paddingBottom: '0.6rem',
+          paddingLeft:   'calc(1rem + env(safe-area-inset-left, 0px))',
+          paddingRight:  'calc(1rem + env(safe-area-inset-right, 0px))',
         }}>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={() => navigate('/')}
-              className="text-sm font-bold font-arabic px-2 py-1 rounded-lg transition-all hover:brightness-125"
-              style={{ color: 'var(--cream-2)', background: 'transparent' }}
+              className="text-sm font-bold font-arabic px-2.5 py-1.5 rounded-xl transition-all hover:brightness-125"
+              style={{ color: 'rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}
             >
               ← رجوع
             </button>
@@ -138,17 +149,29 @@ export function TvDisplayPage() {
 
           {/* Center: logo + room code */}
           <div className="flex items-center gap-3">
-            <span style={{ fontFamily: "'Amiri', serif", fontSize: '1.3rem', color: 'var(--gold-2)' }}>
+            <span style={{
+              fontFamily: "'Amiri', serif",
+              fontSize: '1.4rem',
+              fontWeight: 700,
+              background: 'linear-gradient(135deg, var(--gold-dim), var(--gold-2))',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}>
               حروف
             </span>
             <div
-              className="flex items-center gap-1.5 px-3 py-1 rounded-lg"
-              style={{ background: 'var(--elevated)', border: '1px solid var(--border-gold)' }}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-xl"
+              style={{
+                background: 'rgba(201,168,76,0.08)',
+                border: '1px solid rgba(201,168,76,0.2)',
+                backdropFilter: 'blur(8px)',
+              }}
             >
-              <span className="text-xs font-arabic font-bold" style={{ color: 'var(--cream-2)' }}>
-                رمز الغرفة
+              <span className="text-xs font-arabic" style={{ color: 'var(--cream-2)', opacity: 0.6 }}>
+                غرفة
               </span>
-              <span className="font-black text-base tracking-widest font-arabic" style={{ color: 'var(--gold)' }}>
+              <span className="font-black text-base tracking-widest font-arabic" style={{ color: 'var(--gold)', letterSpacing: '0.12em' }}>
                 {session.roomCode}
               </span>
             </div>
@@ -195,16 +218,28 @@ export function TvDisplayPage() {
       {sessionEndedCountdown !== null && (
         <div
           className="fixed inset-0 flex flex-col items-center justify-center z-50 gap-4"
-          style={{ background: 'rgba(7,9,15,0.92)', backdropFilter: 'blur(4px)' }}
+          style={{ background: 'rgba(2,2,3,0.94)', backdropFilter: 'blur(16px)' }}
         >
           <div
             className="font-bold font-arabic"
-            style={{ fontFamily: "'Amiri', serif", fontSize: '3.5rem', color: 'var(--cream)' }}
+            style={{
+              fontFamily: "'Amiri', serif",
+              fontSize: 'clamp(2.5rem, 8vw, 4rem)',
+              color: 'var(--cream)',
+              textShadow: '0 0 40px rgba(201,168,76,0.25)',
+            }}
           >
             انتهت الجلسة
           </div>
-          <div className="text-xl font-arabic" style={{ color: 'var(--cream-2)' }}>
-            العودة للرئيسية خلال {sessionEndedCountdown} ثوانٍ...
+          <div
+            className="font-arabic"
+            style={{ color: 'rgba(255,255,255,0.35)', fontSize: '1.1rem' }}
+          >
+            العودة للرئيسية خلال{' '}
+            <span className="timer-num font-bold" style={{ color: 'var(--gold-2)' }}>
+              {sessionEndedCountdown}
+            </span>{' '}
+            ثوانٍ...
           </div>
         </div>
       )}

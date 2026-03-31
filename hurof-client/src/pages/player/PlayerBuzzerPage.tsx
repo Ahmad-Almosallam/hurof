@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Lock, Trophy, Loader, XCircle } from 'lucide-react';
 import { RtlWrapper } from '../../components/layout/RtlWrapper';
 import { GameOverBanner } from '../../components/ui/GameOverBanner';
 import { ConnectionStatus } from '../../components/ui/ConnectionStatus';
@@ -130,8 +131,13 @@ export function PlayerBuzzerPage() {
   /* ── Loading ── */
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--void)' }}>
-        <div className="font-arabic" style={{ color: 'var(--cream-2)' }}>جارٍ التحميل...</div>
+      <div className="min-h-dvh flex items-center justify-center" style={{ background: 'var(--void)' }}>
+        <Loader
+          size={36}
+          style={{ color: 'var(--gold)', animation: 'spin 1s linear infinite' }}
+          aria-label="جارٍ التحميل"
+        />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
@@ -140,9 +146,9 @@ export function PlayerBuzzerPage() {
   if (!session) {
     return (
       <RtlWrapper>
-        <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--void)' }}>
-          <div className="text-center flex flex-col gap-4">
-            <div className="text-4xl mb-2">❌</div>
+        <div className="min-h-dvh flex items-center justify-center p-4" style={{ background: 'var(--void)' }}>
+          <div className="text-center flex flex-col items-center gap-4">
+            <XCircle size={48} style={{ color: '#f87171' }} aria-hidden="true" />
             <p className="font-arabic" style={{ color: 'var(--cream-2)' }}>الجلسة غير موجودة</p>
             <button
               onClick={() => navigate('/')}
@@ -161,7 +167,7 @@ export function PlayerBuzzerPage() {
   if (!nameSubmitted) {
     return (
       <RtlWrapper>
-        <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--void)' }}>
+        <div className="min-h-dvh flex items-center justify-center p-4" style={{ background: 'var(--void)' }}>
           <form
             onSubmit={handleNameSubmit}
             className="w-full max-w-xs flex flex-col gap-4"
@@ -185,8 +191,6 @@ export function PlayerBuzzerPage() {
                 border: '1px solid rgba(201,168,76,0.22)',
                 fontSize: '1.1rem',
               }}
-              onFocus={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.55)')}
-              onBlur={e  => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.22)')}
               autoFocus
             />
             <button
@@ -216,33 +220,61 @@ export function PlayerBuzzerPage() {
   type BuzzerState = 'canBuzz' | 'won' | 'lost' | 'waiting';
   const buzzerState: BuzzerState = isLocked ? (iWon ? 'won' : 'lost') : !hasActiveLetter ? 'waiting' : 'canBuzz';
 
+  /* ── Cinematic ambient config per state ── */
+  const ambientConfig = {
+    canBuzz: {
+      orbColor: 'rgba(201,168,76,0.18)',
+      orbSize: 420,
+      animation: 'gold-bloom-pulse 2s ease-in-out infinite',
+    },
+    won: {
+      orbColor: 'rgba(74,222,128,0.22)',
+      orbSize: 480,
+      animation: 'gold-bloom-pulse 1.5s ease-in-out infinite',
+    },
+    lost: {
+      orbColor: 'rgba(255,255,255,0.02)',
+      orbSize: 300,
+      animation: 'none',
+    },
+    waiting: {
+      orbColor: 'rgba(255,255,255,0.02)',
+      orbSize: 300,
+      animation: 'none',
+    },
+  }[buzzerState];
+
   const buzzerConfig = {
     canBuzz: {
-      bg:    'linear-gradient(135deg, var(--gold-dim) 0%, var(--gold) 45%, var(--gold-2) 100%)',
-      glow:  '0 0 40px var(--gold-glow), 0 0 80px rgba(201,168,76,0.15)',
-      color: '#07090F',
+      bg:    'linear-gradient(145deg, #B8922A 0%, var(--gold) 35%, var(--gold-bright) 65%, var(--gold-2) 100%)',
+      glow:  '0 0 0 1px rgba(255,255,255,0.15) inset, 0 -4px 0 rgba(0,0,0,0.4) inset, 0 4px 0 rgba(255,255,255,0.12) inset, 0 8px 50px rgba(201,168,76,0.55), 0 0 120px rgba(201,168,76,0.2)',
+      color: '#02020A',
+      icon:  null,
       text:  'اضغط!',
       ring:  true,
     },
     won: {
-      bg:    'linear-gradient(135deg, #166534 0%, #22c55e 50%, #4ade80 100%)',
-      glow:  '0 0 40px rgba(74,222,128,0.35), 0 0 80px rgba(74,222,128,0.15)',
+      bg:    'linear-gradient(145deg, #14532d 0%, #16a34a 40%, #4ade80 80%, #86efac 100%)',
+      glow:  '0 0 0 1px rgba(255,255,255,0.15) inset, 0 -4px 0 rgba(0,0,0,0.4) inset, 0 4px 0 rgba(255,255,255,0.15) inset, 0 8px 50px rgba(74,222,128,0.5), 0 0 120px rgba(74,222,128,0.2)',
       color: '#fff',
-      text:  '🎉 أنت أول!',
+      icon:  <Trophy size={32} aria-hidden="true" />,
+      text:  'أنت أول!',
       ring:  false,
     },
     lost: {
-      bg:    'var(--surface)',
-      glow:  'none',
+      bg:    'linear-gradient(145deg, #0a0b0e, #13151c)',
+      glow:  '0 0 0 1px rgba(255,255,255,0.05) inset, 0 4px 20px rgba(0,0,0,0.6)',
       color: 'var(--cream-2)',
-      text:  `🔒 ${buzzWinner?.playerName ?? ''}`,
+      icon:  <Lock size={22} aria-hidden="true" style={{ opacity: 0.6 }} />,
+      text:  buzzWinner?.playerName ?? '',
       ring:  false,
     },
     waiting: {
-      bg:    'var(--surface)',
-      glow:  'none',
-      color: 'var(--muted)',
-      text:  '⏳ انتظر...',
+      bg:    'linear-gradient(145deg, #0a0b0e, #13151c)',
+      glow:  '0 0 0 1px rgba(255,255,255,0.04) inset, 0 4px 20px rgba(0,0,0,0.5)',
+      color: 'rgba(255,255,255,0.2)',
+      icon:  null,
+      text:  'انتظر...',
       ring:  false,
     },
   }[buzzerState];
@@ -250,41 +282,68 @@ export function PlayerBuzzerPage() {
   return (
     <RtlWrapper>
       <div
-        className="min-h-screen flex flex-col items-center justify-center gap-10"
+        className="relative min-h-dvh flex flex-col items-center justify-center gap-10 overflow-hidden"
         style={{
           background: 'var(--void)',
           padding: 'calc(1.5rem + env(safe-area-inset-top, 0px)) calc(1.5rem + env(safe-area-inset-right, 0px)) calc(1.5rem + env(safe-area-inset-bottom, 0px)) calc(1.5rem + env(safe-area-inset-left, 0px))',
         }}
       >
+        {/* Cinematic reactive ambient orb */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            width: ambientConfig.orbSize,
+            height: ambientConfig.orbSize,
+            borderRadius: '50%',
+            background: `radial-gradient(circle, ${ambientConfig.orbColor} 0%, transparent 70%)`,
+            filter: 'blur(60px)',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            animation: ambientConfig.animation,
+            transition: 'background 0.6s ease, width 0.6s ease, height 0.6s ease',
+            pointerEvents: 'none',
+          }}
+        />
+
         {/* Player name */}
-        <div className="flex items-center gap-3">
-          <span className="text-lg font-bold font-arabic" style={{ color: 'var(--cream)' }}>
+        <div className="relative flex flex-col items-center gap-1.5">
+          <span
+            className="text-xl font-bold font-arabic"
+            style={{
+              color: buzzerState === 'won' ? '#4ade80' : buzzerState === 'canBuzz' ? 'var(--gold-2)' : 'var(--cream)',
+              transition: 'color 0.4s ease',
+              textShadow: buzzerState === 'canBuzz' ? '0 0 20px rgba(201,168,76,0.5)' : buzzerState === 'won' ? '0 0 20px rgba(74,222,128,0.5)' : 'none',
+            }}
+          >
             {playerName}
           </span>
           <button
             onClick={handleChangeName}
-            className="text-sm font-arabic underline transition-all hover:brightness-125"
-            style={{ color: 'var(--cream-2)' }}
+            className="text-xs font-arabic transition-all hover:opacity-80"
+            style={{ color: 'var(--cream-2)', opacity: 0.5 }}
           >
             تغيير الاسم
           </button>
         </div>
 
         {/* Buzzer button */}
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {/* Expanding rings when active */}
+        <div className="relative flex items-center justify-center">
+          {/* Expanding rings — more dramatic */}
           {buzzerConfig.ring && (
             <>
-              {[0, 0.6, 1.2].map(delay => (
+              {[0, 0.55, 1.1, 1.65].map(delay => (
                 <div
                   key={delay}
+                  aria-hidden="true"
                   style={{
                     position: 'absolute',
-                    width: 224,
-                    height: 224,
+                    width: 240,
+                    height: 240,
                     borderRadius: '50%',
-                    border: '2px solid var(--gold)',
-                    animation: `ring-expand 1.8s ${delay}s ease-out infinite`,
+                    border: `${delay === 0 ? 2 : 1}px solid rgba(201,168,76,${delay === 0 ? 0.6 : 0.3})`,
+                    animation: `ring-expand 2s ${delay}s cubic-bezier(0.25,0.46,0.45,0.94) infinite`,
                     pointerEvents: 'none',
                   }}
                 />
@@ -292,22 +351,40 @@ export function PlayerBuzzerPage() {
             </>
           )}
 
+          {/* Outer halo ring */}
+          <div
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              width: 270, height: 270,
+              borderRadius: '50%',
+              background: `radial-gradient(circle, ${buzzerState === 'won' ? 'rgba(74,222,128,0.08)' : buzzerState === 'canBuzz' ? 'rgba(201,168,76,0.08)' : 'transparent'} 0%, transparent 70%)`,
+              filter: 'blur(8px)',
+              transition: 'background 0.5s ease',
+              pointerEvents: 'none',
+            }}
+          />
+
           <button
-            onClick={() => canBuzz && buzzMutation.mutate()}
+            onClick={() => {
+              if (!canBuzz) return;
+              navigator.vibrate?.(15);
+              buzzMutation.mutate();
+            }}
             disabled={!canBuzz}
-            className="w-56 h-56 rounded-full font-black text-3xl font-arabic transition-all"
+            aria-label={canBuzz ? 'اضغط الجرس' : buzzerConfig.text}
+            className="relative w-60 h-60 rounded-full font-black font-arabic transition-all flex flex-col items-center justify-center gap-2.5 active:scale-[0.92]"
             style={{
               background: buzzerConfig.bg,
               color: buzzerConfig.color,
               boxShadow: buzzerConfig.glow,
-              border: `2px solid ${buzzerState === 'canBuzz' ? 'rgba(201,168,76,0.5)' : 'transparent'}`,
-              cursor: canBuzz ? 'pointer' : 'default',
+              fontSize: buzzerState === 'lost' ? '1rem' : '1.9rem',
+              transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
+              border: 'none',
             }}
-            onMouseDown={e => { if (canBuzz) (e.currentTarget.style.transform = 'scale(0.95)'); }}
-            onMouseUp={e   => { (e.currentTarget.style.transform = 'scale(1)'); }}
-            onMouseLeave={e => { (e.currentTarget.style.transform = 'scale(1)'); }}
           >
-            {buzzerConfig.text}
+            {buzzerConfig.icon}
+            <span style={{ lineHeight: 1 }}>{buzzerConfig.text}</span>
           </button>
         </div>
 
@@ -315,8 +392,8 @@ export function PlayerBuzzerPage() {
 
         <button
           onClick={handleExit}
-          className="text-sm font-arabic underline transition-all hover:brightness-125"
-          style={{ color: 'var(--muted)' }}
+          className="relative text-xs font-arabic transition-all hover:opacity-60"
+          style={{ color: 'var(--cream-2)', opacity: 0.35 }}
         >
           الخروج من اللعبة
         </button>
