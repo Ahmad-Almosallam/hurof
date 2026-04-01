@@ -541,19 +541,31 @@ export function HostDashboard() {
             <span style={{ color: 'var(--gold-2)', fontSize: 14, fontWeight: 900, letterSpacing: '0.15em', fontFamily: "'Cairo', sans-serif" }}>{session.roomCode}</span>
           </div>
 
-          {/* Inline question — shown above grid when a cell is active */}
-          {activeCellId && (
-            <div style={{ flexShrink: 0, padding: '0.375rem 0.5rem', borderBottom: '1px solid rgba(201,168,76,0.14)', backgroundColor: 'var(--surface)' }}>
-              {questionLoading ? (
-                <div className="flex justify-center py-2">
-                  <div className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-                </div>
-              ) : (questionError || nextQMutation.error) ? (
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 text-red-300 text-xs">{extractApiError(questionError ?? nextQMutation.error)}</div>
-                  <button onClick={() => nextQMutation.mutate()} disabled={nextQMutation.isPending} className="px-2 py-1 rounded-lg bg-slate-700 text-slate-300 text-xs disabled:opacity-50">سؤال آخر</button>
-                </div>
-              ) : question ? (
+          {/* Inline question — always mounted to prevent layout shift */}
+          <div style={{ flexShrink: 0, minHeight: '4.5rem', padding: '0.375rem 0.5rem', borderBottom: '1px solid rgba(201,168,76,0.14)', backgroundColor: 'var(--surface)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            {!activeCellId ? (
+              /* Placeholder — no letter selected */
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', opacity: 0.35, transition: 'opacity 0.25s ease' }}>
+                <span style={{ fontSize: 18, color: 'var(--gold-dim)' }}>⬡</span>
+                <span style={{ fontSize: 12, fontFamily: "'Cairo', sans-serif", color: 'var(--cream-2)', fontWeight: 600 }}>اختر حرفاً من الشبكة</span>
+              </div>
+            ) : questionLoading ? (
+              /* Skeleton shimmer — preserves height during fetch */
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.25rem 0', animation: 'none' }}>
+                <div style={{ height: 12, borderRadius: 6, background: 'linear-gradient(90deg, rgba(201,168,76,0.08) 25%, rgba(201,168,76,0.18) 50%, rgba(201,168,76,0.08) 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s ease-in-out infinite', width: '70%' }} />
+                <div style={{ height: 10, borderRadius: 6, background: 'linear-gradient(90deg, rgba(201,168,76,0.08) 25%, rgba(201,168,76,0.18) 50%, rgba(201,168,76,0.08) 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s ease-in-out infinite 0.2s', width: '45%' }} />
+                <style>{`@keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }`}</style>
+              </div>
+            ) : (questionError || nextQMutation.error) ? (
+              /* Error state */
+              <div className="flex items-center gap-2" style={{ transition: 'opacity 0.2s ease', opacity: 1 }}>
+                <div className="flex-1 text-red-300 text-xs">{extractApiError(questionError ?? nextQMutation.error)}</div>
+                <button onClick={() => nextQMutation.mutate()} disabled={nextQMutation.isPending} className="px-2 py-1 rounded-lg bg-slate-700 text-slate-300 text-xs disabled:opacity-50">سؤال آخر</button>
+              </div>
+            ) : question ? (
+              /* Question card — fade + slide up on mount */
+              <div style={{ animation: 'questionIn 0.22s ease both' }}>
+                <style>{`@keyframes questionIn { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: translateY(0) } }`}</style>
                 <QuestionCard
                   key={activeCellId ?? ''}
                   question={question}
@@ -565,9 +577,9 @@ export function HostDashboard() {
                   isLoading={nextQMutation.isPending}
                   compact
                 />
-              ) : null}
-            </div>
-          )}
+              </div>
+            ) : null}
+          </div>
 
           {/* Grid */}
           <div ref={setGridContainer} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>

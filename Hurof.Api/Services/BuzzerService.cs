@@ -27,6 +27,8 @@ public class BuzzerService(AppDbContext db, IHubContext<GameHub> hubContext, ILe
         session.BuzzerLockedAt = DateTime.UtcNow;
         await db.SaveChangesAsync();
 
+        leaderboard.SetCurrentContender(session.RoomCode, playerName);
+
         await hubContext.Clients.Group(session.RoomCode)
             .SendAsync("BuzzWinner", new { playerName, lockedAt = session.BuzzerLockedAt });
 
@@ -38,8 +40,7 @@ public class BuzzerService(AppDbContext db, IHubContext<GameHub> hubContext, ILe
         var session = await ResolveAsync(identifier);
         if (session is null) return false;
 
-        if (session.BuzzerLockedByPlayer is not null)
-            await leaderboard.RecordStreakResetAsync(session.RoomCode, session.BuzzerLockedByPlayer);
+        await leaderboard.RecordStreakResetForContenderAsync(session.RoomCode);
 
         session.BuzzerLockedByPlayer = null;
         session.BuzzerLockedAt = null;

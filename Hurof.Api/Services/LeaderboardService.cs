@@ -7,8 +7,22 @@ namespace Hurof.Api.Services;
 
 public interface ILeaderboardService
 {
-    Task RecordCorrectAnswerAsync(string roomCode, string playerName);
-    Task RecordStreakResetAsync(string roomCode, string playerName);
+    /// <summary>Called when a player wins the buzzer. Stores them as the active contender for this room.</summary>
+    void SetCurrentContender(string roomCode, string playerName);
+
+    /// <summary>
+    /// Called when a letter is assigned to a team. Records a correct answer for whoever is the
+    /// current contender, then clears the contender so a subsequent buzzer reset does not also
+    /// penalise them with a streak reset.
+    /// </summary>
+    Task RecordCorrectAnswerForContenderAsync(string roomCode);
+
+    /// <summary>
+    /// Called when the host resets the buzzer. Only resets the streak if a contender is still
+    /// set (i.e. the correct answer was not already recorded for this buzz round).
+    /// </summary>
+    Task RecordStreakResetForContenderAsync(string roomCode);
+
     IReadOnlyList<LeaderboardEntryResponse> GetLeaderboard(string roomCode);
     void ClearRoom(string roomCode);
 }
@@ -22,10 +36,23 @@ public class LeaderboardService(IHubContext<GameHub> hubContext) : ILeaderboardS
         public int LongestStreak;
     }
 
+    // roomCode → playerName stats
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, PlayerStats>> _rooms = new();
 
-    public async Task RecordCorrectAnswerAsync(string roomCode, string playerName)
+    // roomCode → current buzzer contender (the player who buzzed last and hasn't been resolved yet)
+    private readonly ConcurrentDictionary<string, string> _contenders = new();
+
+    public void SetCurrentContender(string roomCode, string playerName)
     {
+        _contenders[roomCode] = playerName;
+        // Ensure the player entry exists so they appear in the leaderboard immediately
+        GetOrCreate(roomCode, playerName);
+    }
+
+    public async Task RecordCorrectAnswerForContenderAsync(string roomCode)
+    {
+        if (!_contenders.TryRemove(roomCode, out var playerName)) return;
+
         var stats = GetOrCreate(roomCode, playerName);
         lock (stats)
         {
@@ -37,8 +64,11 @@ public class LeaderboardService(IHubContext<GameHub> hubContext) : ILeaderboardS
         await BroadcastLeaderboardAsync(roomCode);
     }
 
-    public async Task RecordStreakResetAsync(string roomCode, string playerName)
+    public async Task RecordStreakResetForContenderAsync(string roomCode)
     {
+        // Only act if there is still an unresolved contender (correct answer clears it first)
+        if (!_contenders.TryRemove(roomCode, out var playerName)) return;
+
         var stats = GetOrCreate(roomCode, playerName);
         lock (stats)
         {
@@ -47,14 +77,13 @@ public class LeaderboardService(IHubContext<GameHub> hubContext) : ILeaderboardS
         await BroadcastLeaderboardAsync(roomCode);
     }
 
-    public IReadOnlyList<LeaderboardEntryResponse> GetLeaderboard(string roomCode)
-    {
-        return BuildLeaderboard(roomCode);
-    }
+    public IReadOnlyList<LeaderboardEntryResponse> GetLeaderboard(string roomCode) =>
+        BuildLeaderboard(roomCode);
 
     public void ClearRoom(string roomCode)
     {
         _rooms.TryRemove(roomCode, out _);
+        _contenders.TryRemove(roomCode, out _);
     }
 
     private async Task BroadcastLeaderboardAsync(string roomCode)
