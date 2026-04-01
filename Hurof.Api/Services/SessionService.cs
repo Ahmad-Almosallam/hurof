@@ -19,7 +19,8 @@ public interface ISessionService
 public class SessionService(
     AppDbContext db,
     IGridGeneratorService gridGenerator,
-    IHubContext<GameHub> hubContext) : ISessionService
+    IHubContext<GameHub> hubContext,
+    ILeaderboardService leaderboard) : ISessionService
 {
     public async Task<SessionResponse> CreateSessionAsync(CreateSessionRequest request)
     {
@@ -53,9 +54,11 @@ public class SessionService(
         var session = await ResolveSessionAsync(identifier);
         if (session is null) return false;
 
+        var finalLeaderboard = leaderboard.GetLeaderboard(session.RoomCode);
         await hubContext.Clients.Group(session.RoomCode)
-            .SendAsync("GameOver", new { winnerTeam = (int?)null, winningPath = (object?)null });
+            .SendAsync("GameOver", new { winnerTeam = (int?)null, winningPath = (object?)null, leaderboard = finalLeaderboard });
 
+        leaderboard.ClearRoom(session.RoomCode);
         db.Sessions.Remove(session);
         await db.SaveChangesAsync();
 
@@ -78,6 +81,7 @@ public class SessionService(
         session.BuzzerLockedByPlayer = null;
         session.BuzzerLockedAt = null;
 
+        leaderboard.ClearRoom(session.RoomCode);
         await db.SaveChangesAsync();
 
         var cellResponses = newCells.Select(c =>

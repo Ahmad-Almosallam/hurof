@@ -18,7 +18,8 @@ public class LetterService(
     AppDbContext db,
     IWinDetectionService winDetection,
     IHubContext<GameHub> hubContext,
-    IExternalQuestionService externalQuestions) : ILetterService
+    IExternalQuestionService externalQuestions,
+    ILeaderboardService leaderboard) : ILetterService
 {
     public async Task<SetLetterStateResponse?> SetStateAsync(string identifier, Guid cellId, LetterState newState)
     {
@@ -55,6 +56,13 @@ public class LetterService(
         await hubContext.Clients.Group(session.RoomCode)
             .SendAsync("GridUpdate", cellResponse);
 
+        // Record correct answer for the locked player
+        if (newState is LetterState.AssignedTeam1 or LetterState.AssignedTeam2
+            && session.BuzzerLockedByPlayer is not null)
+        {
+            await leaderboard.RecordCorrectAnswerAsync(session.RoomCode, session.BuzzerLockedByPlayer);
+        }
+
         // Check for win only on assignment
         WinResult? winResult = null;
         if (newState is LetterState.AssignedTeam1 or LetterState.AssignedTeam2)
@@ -62,11 +70,13 @@ public class LetterService(
             winResult = winDetection.DetectWin(session.LetterCells, session.GridSize);
             if (winResult is not null)
             {
+                var finalLeaderboard = leaderboard.GetLeaderboard(session.RoomCode);
                 await hubContext.Clients.Group(session.RoomCode)
                     .SendAsync("GameOver", new
                     {
                         winnerTeam = winResult.WinnerTeam,
-                        winningPath = winResult.Path
+                        winningPath = winResult.Path,
+                        leaderboard = finalLeaderboard
                     });
 
                 session.Status = SessionStatus.Ended;

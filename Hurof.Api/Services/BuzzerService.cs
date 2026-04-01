@@ -13,7 +13,7 @@ public interface IBuzzerService
     Task<bool> ResetAsync(string identifier);
 }
 
-public class BuzzerService(AppDbContext db, IHubContext<GameHub> hubContext) : IBuzzerService
+public class BuzzerService(AppDbContext db, IHubContext<GameHub> hubContext, ILeaderboardService leaderboard) : IBuzzerService
 {
     public async Task<BuzzResponse?> BuzzAsync(string identifier, string playerName)
     {
@@ -37,6 +37,9 @@ public class BuzzerService(AppDbContext db, IHubContext<GameHub> hubContext) : I
     {
         var session = await ResolveAsync(identifier);
         if (session is null) return false;
+
+        if (session.BuzzerLockedByPlayer is not null)
+            await leaderboard.RecordStreakResetAsync(session.RoomCode, session.BuzzerLockedByPlayer);
 
         session.BuzzerLockedByPlayer = null;
         session.BuzzerLockedAt = null;
