@@ -40,6 +40,7 @@ export function LandingPage() {
   const navigate = useNavigate();
   const [sessionId, setSessionId]       = useState('');
   const [savedHostRoom, setSavedHostRoom] = useState<string | null>(null);
+  const validCode = sessionId.trim().length >= 4;
 
   useEffect(() => {
     const saved = localStorage.getItem('hurof_host_room');
@@ -221,15 +222,15 @@ export function LandingPage() {
             </div>
 
             <button
-              onClick={() => sessionId.trim() && navigate(`/play/${sessionId.trim()}`)}
-              disabled={!sessionId.trim()}
+              onClick={() => validCode && navigate(`/play/${sessionId.trim()}`)}
+              disabled={!validCode}
               className="w-full py-3.5 rounded-xl font-bold text-lg font-arabic transition-all disabled:opacity-35 hover:brightness-110 active:scale-[0.97]"
               style={{
-                background: sessionId.trim()
+                background: validCode
                   ? 'linear-gradient(135deg, rgba(201,168,76,0.15), rgba(201,168,76,0.08))'
                   : 'rgba(255,255,255,0.03)',
-                color: sessionId.trim() ? 'var(--gold-2)' : 'var(--cream-2)',
-                border: `1px solid ${sessionId.trim() ? 'rgba(201,168,76,0.35)' : 'rgba(255,255,255,0.06)'}`,
+                color: validCode ? 'var(--gold-2)' : 'var(--cream-2)',
+                border: `1px solid ${validCode ? 'rgba(201,168,76,0.35)' : 'rgba(255,255,255,0.06)'}`,
                 backdropFilter: 'blur(8px)',
                 transition: 'all 0.25s cubic-bezier(0.16,1,0.3,1)',
               }}
@@ -238,8 +239,8 @@ export function LandingPage() {
             </button>
 
             <button
-              onClick={() => sessionId.trim() && navigate(`/tv/${sessionId.trim()}`)}
-              disabled={!sessionId.trim()}
+              onClick={() => validCode && navigate(`/tv/${sessionId.trim()}`)}
+              disabled={!validCode}
               className="w-full py-3 rounded-xl font-bold text-base font-arabic transition-all disabled:opacity-35 hover:brightness-110 active:scale-[0.97]"
               style={{
                 background: 'rgba(255,255,255,0.02)',
@@ -251,13 +252,13 @@ export function LandingPage() {
             </button>
 
             <button
-              onClick={() => sessionId.trim() && navigate(`/host/dashboard?roomCode=${sessionId.trim()}`)}
+              onClick={() => validCode && navigate(`/host/dashboard?roomCode=${sessionId.trim()}`)}
               disabled={!sessionId.trim()}
-              className="w-full py-2.5 rounded-xl font-bold text-sm font-arabic transition-all disabled:opacity-25 hover:opacity-70 active:scale-[0.97]"
+              className="w-full py-2.5 rounded-xl font-bold text-sm font-arabic transition-all disabled:opacity-40 hover:opacity-80 active:scale-[0.97]"
               style={{
                 background: 'transparent',
                 color: 'var(--cream-2)',
-                opacity: 0.45,
+                opacity: 0.7,
               }}
             >
               انضم كمضيف

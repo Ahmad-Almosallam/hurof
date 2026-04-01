@@ -18,11 +18,13 @@ export function BuzzBanner({ playerName, onReset, showReset, timerSecondsLeft, t
       role="alert"
       aria-live="assertive"
       aria-atomic="true"
-      className="fixed inset-0 flex flex-col items-center justify-center z-50 gap-7"
+      className="fixed top-0 left-0 right-0 flex flex-col items-center justify-center z-50 gap-3"
       style={{
-        background: 'radial-gradient(ellipse 80% 70% at 50% 35%, rgba(20,14,4,0.97) 0%, rgba(2,2,3,0.99) 100%)',
-        backdropFilter: 'blur(4px)',
+        height: '45dvh',
+        background: 'linear-gradient(to bottom, rgba(2,2,3,0.98) 0%, rgba(10,7,2,0.97) 55%, rgba(2,2,3,0.88) 80%, rgba(2,2,3,0.0) 100%)',
+        backdropFilter: 'blur(6px)',
         overflow: 'hidden',
+        paddingBottom: '2dvh',
       }}
     >
       {/* Light rays (purely decorative, SVG-based) */}
@@ -97,7 +99,7 @@ export function BuzzBanner({ playerName, onReset, showReset, timerSecondsLeft, t
         }}
         aria-hidden="true"
       >
-        <Bell size={60} strokeWidth={1.5} />
+        <Bell size={46} strokeWidth={1.5} />
       </div>
 
       {/* Player name */}
@@ -105,7 +107,7 @@ export function BuzzBanner({ playerName, onReset, showReset, timerSecondsLeft, t
         <div
           style={{
             fontFamily: "'Amiri', serif",
-            fontSize: 'clamp(2.8rem, 9vw, 5.5rem)',
+            fontSize: 'clamp(2rem, 6vw, 3.8rem)',
             fontWeight: 700,
             background: 'linear-gradient(160deg, var(--gold-dim) 0%, var(--gold-bright) 45%, var(--gold-2) 100%)',
             WebkitBackgroundClip: 'text',
@@ -138,7 +140,7 @@ export function BuzzBanner({ playerName, onReset, showReset, timerSecondsLeft, t
           <span
             className="font-black font-arabic timer-num"
             style={{
-              fontSize: 'clamp(4rem, 13vw, 7.5rem)',
+              fontSize: 'clamp(3rem, 9vw, 5.5rem)',
               color: timerColor,
               lineHeight: 1,
               textShadow: `0 0 40px ${timerColor}88, 0 0 80px ${timerColor}33`,
@@ -158,7 +160,7 @@ export function BuzzBanner({ playerName, onReset, showReset, timerSecondsLeft, t
               letterSpacing: '0.06em',
             }}
           >
-            {timerPhase === 1 ? 'وقت الطارئ' : 'وقت الفريق'}
+            {timerPhase === 1 ? 'وقت الضغط' : 'وقت التفكير'}
           </span>
         </div>
       )}

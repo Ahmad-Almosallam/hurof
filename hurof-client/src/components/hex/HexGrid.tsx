@@ -5,25 +5,46 @@ const HEX_W        = 110;
 const HEX_H        = HEX_W * 1.1547;
 const HEX_GAP      = 0;
 const HEX_ROW_STEP = HEX_H * 0.75 - 1;
-const EDGE_SIZE    = 12;
-const EDGE_GAP     = 6;
+const EDGE_SIZE    = 20;
+const EDGE_GAP     = 4;
 
 interface HexGridProps {
   cells: LetterCellResponse[];
   gridSize: number;
   team1Color: string;
   team2Color: string;
+  team1Label?: string;
+  team2Label?: string;
   winningPath?: Set<string>;
   onCellClick?: (cell: LetterCellResponse) => void;
   interactive?: boolean;
   scale?: number;
 }
 
+const edgeLabelStyle = (color: string, vertical?: boolean): React.CSSProperties => ({
+  position: 'absolute',
+  inset: 0,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: 11,
+  fontWeight: 800,
+  fontFamily: "'Cairo', sans-serif",
+  color,
+  opacity: 0.85,
+  letterSpacing: '0.06em',
+  pointerEvents: 'none',
+  writingMode: vertical ? 'vertical-rl' : undefined,
+  transform: vertical ? 'rotate(180deg)' : undefined,
+});
+
 export function HexGrid({
   cells,
   gridSize,
   team1Color,
   team2Color,
+  team1Label = 'فريق ١',
+  team2Label = 'فريق ٢',
   winningPath,
   onCellClick,
   interactive = true,
@@ -52,7 +73,9 @@ export function HexGrid({
           backgroundColor: team1Color,
           borderRadius: 6, opacity: 0.9,
           boxShadow: `0 0 12px ${team1Color}88`,
-        }} />
+        }}>
+          <div style={edgeLabelStyle('#000')}>{team1Label}</div>
+        </div>
         {/* Team 1 — Bottom edge */}
         <div style={{
           position: 'absolute', bottom: 0, right: edgeOffset,
@@ -60,7 +83,9 @@ export function HexGrid({
           backgroundColor: team1Color,
           borderRadius: 6, opacity: 0.9,
           boxShadow: `0 0 12px ${team1Color}88`,
-        }} />
+        }}>
+          <div style={edgeLabelStyle('#000')}>{team1Label}</div>
+        </div>
         {/* Team 2 — Right edge */}
         <div style={{
           position: 'absolute', top: edgeOffset, right: 0,
@@ -68,7 +93,9 @@ export function HexGrid({
           backgroundColor: team2Color,
           borderRadius: 6, opacity: 0.9,
           boxShadow: `0 0 12px ${team2Color}88`,
-        }} />
+        }}>
+          <div style={edgeLabelStyle('#000', true)}>{team2Label}</div>
+        </div>
         {/* Team 2 — Left edge */}
         <div style={{
           position: 'absolute', top: edgeOffset, left: 0,
@@ -76,7 +103,9 @@ export function HexGrid({
           backgroundColor: team2Color,
           borderRadius: 6, opacity: 0.9,
           boxShadow: `0 0 12px ${team2Color}88`,
-        }} />
+        }}>
+          <div style={edgeLabelStyle('#000', true)}>{team2Label}</div>
+        </div>
 
         {/* Cell area background */}
         <div style={{
