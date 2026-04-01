@@ -7,7 +7,6 @@ import { BuzzBanner } from '../../components/ui/BuzzBanner';
 import { GameOverBanner } from '../../components/ui/GameOverBanner';
 import { TimerOverlay } from '../../components/ui/TimerOverlay';
 import { TeamScoreBadge } from '../../components/ui/TeamScoreBadge';
-import { ConnectionStatus } from '../../components/ui/ConnectionStatus';
 import { useGameHub } from '../../hooks/useGameHub';
 import { useGridScale } from '../../hooks/useGridScale';
 import { queryKeys } from '../../lib/queryKeys';
@@ -168,7 +167,6 @@ export function TvDisplayPage() {
                 {session.roomCode}
               </span>
             </div>
-            <ConnectionStatus state={connectionState} />
           </div>
 
           <TeamScoreBadge label="فريق ٢" score={team2Score} color={session.team2Color} />
@@ -208,10 +206,16 @@ export function TvDisplayPage() {
           team2Color={session.team2Color}
         />
       )}
-      {connectionState === 'Disconnected' && (
+      {connectionState !== 'Connected' && (
         <div
           className="fixed inset-0 flex flex-col items-center justify-center z-50 gap-4"
-          style={{ background: 'rgba(2,2,3,0.88)', backdropFilter: 'blur(12px)' }}
+          style={{
+            background: connectionState === 'Disconnected'
+              ? 'rgba(2,2,3,0.90)'
+              : 'rgba(2,2,3,0.72)',
+            backdropFilter: 'blur(12px)',
+            transition: 'background 0.4s ease',
+          }}
         >
           <div
             style={{
@@ -227,14 +231,14 @@ export function TvDisplayPage() {
             className="font-bold font-arabic"
             style={{ fontSize: 'clamp(1.5rem, 5vw, 2.5rem)', color: 'var(--cream)', textAlign: 'center' }}
           >
-            جارٍ إعادة الاتصال...
+            {connectionState === 'Disconnected' ? 'انقطع الاتصال' : 'جارٍ إعادة الاتصال...'}
           </div>
         </div>
       )}
 
       {sessionEndedCountdown !== null && (
         <div
-          className="fixed inset-0 flex flex-col items-center justify-center z-50 gap-4"
+          className="fixed inset-0 flex flex-col items-center justify-center z-[60] gap-4"
           style={{ background: 'rgba(2,2,3,0.94)', backdropFilter: 'blur(16px)' }}
         >
           <div

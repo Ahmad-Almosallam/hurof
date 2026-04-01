@@ -78,14 +78,14 @@ export function QuestionCard({
         <div className="flex gap-1.5">
           <button
             onClick={onAssignTeam1}
-            className="flex-1 py-1 rounded-lg font-bold text-white text-xs font-arabic transition-all hover:brightness-110"
+            className="flex-1 py-2.5 rounded-lg font-bold text-white text-xs font-arabic transition-all hover:brightness-110"
             style={{ backgroundColor: team1Color, boxShadow: `0 2px 8px ${team1Color}44` }}
           >
             فريق ١
           </button>
           <button
             onClick={onAssignTeam2}
-            className="flex-1 py-1 rounded-lg font-bold text-white text-xs font-arabic transition-all hover:brightness-110"
+            className="flex-1 py-2.5 rounded-lg font-bold text-white text-xs font-arabic transition-all hover:brightness-110"
             style={{ backgroundColor: team2Color, boxShadow: `0 2px 8px ${team2Color}44` }}
           >
             فريق ٢
@@ -93,14 +93,14 @@ export function QuestionCard({
           <button
             onClick={onNextQuestion}
             disabled={isLoading}
-            className="flex-1 py-1 rounded-lg text-xs font-arabic transition-all disabled:opacity-50"
+            className="flex-1 py-2.5 rounded-lg text-xs font-arabic transition-all disabled:opacity-50"
             style={{
               background: 'var(--elevated)',
               color: 'var(--cream-2)',
               border: '1px solid var(--border-gold)',
             }}
           >
-            سؤال آخر
+            {isLoading ? 'جارٍ...' : 'سؤال آخر'}
           </button>
         </div>
       </div>

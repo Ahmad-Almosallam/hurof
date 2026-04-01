@@ -59,6 +59,7 @@ export function HostDashboard() {
   const [sidebarTab, setSidebarTab] = useState<'game' | 'players'>('game');
   const [config, setConfig] = useState<SessionConfig>({ gridSize: 5, team1Color: '#D4702A', team2Color: '#2A8A8A' });
   const [rejoinError, setRejoinError] = useState('');
+  const [createError, setCreateError] = useState('');
   const [hostTakenError, setHostTakenError] = useState('');
   const hasJoinedAsHostRef = useRef(false);
 
@@ -235,6 +236,7 @@ export function HostDashboard() {
       setCells(data.cells);
       setSplash(true);
     },
+    onError: (error: unknown) => setCreateError(extractApiError(error)),
   });
 
   const stateMutation = useMutation({
@@ -470,7 +472,7 @@ export function HostDashboard() {
             </div>
 
             <button
-              onClick={() => createMutation.mutate()}
+              onClick={() => { setCreateError(''); createMutation.mutate(); }}
               disabled={createMutation.isPending}
               className="w-full py-4 rounded-2xl font-black text-lg font-arabic transition-all hover:brightness-110 disabled:opacity-50"
               style={{
@@ -481,6 +483,14 @@ export function HostDashboard() {
             >
               {createMutation.isPending ? 'جارٍ الإنشاء...' : 'ابدأ اللعبة'}
             </button>
+            {createError && (
+              <p
+                className="text-sm text-center font-arabic rounded-xl px-4 py-2"
+                style={{ color: '#f87171', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)' }}
+              >
+                {createError}
+              </p>
+            )}
           </div>
         </div>
       </RtlWrapper>
@@ -545,6 +555,7 @@ export function HostDashboard() {
                 </div>
               ) : question ? (
                 <QuestionCard
+                  key={activeCellId ?? ''}
                   question={question}
                   onNextQuestion={() => nextQMutation.mutate()}
                   onAssignTeam1={() => handleAssign(1)}
@@ -700,6 +711,7 @@ export function HostDashboard() {
                     </div>
                   ) : (
                     <QuestionCard
+                      key={activeCellId ?? ''}
                       question={question!}
                       onNextQuestion={() => nextQMutation.mutate()}
                       onAssignTeam1={() => handleAssign(1)}
@@ -730,9 +742,9 @@ export function HostDashboard() {
                   لا يوجد لاعبون متصلون
                 </div>
               ) : (
-                players.map((name, i) => (
+                players.map((name) => (
                   <div
-                    key={i}
+                    key={name}
                     className="flex items-center gap-3 rounded-xl px-4 py-2.5"
                     style={{ background: 'var(--elevated)', border: '1px solid rgba(201,168,76,0.1)' }}
                   >
@@ -833,8 +845,11 @@ export function HostDashboard() {
               boxShadow: `0 2px 12px ${session.team1Color}44`,
             }}
           >
-            <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: 700, fontFamily: "'Cairo', sans-serif" }}>رمز الغرفة</span>
-            <span style={{ color: '#fff', fontSize: 20, fontWeight: 900, letterSpacing: '0.15em', fontFamily: "'Cairo', sans-serif" }}>{session.roomCode}</span>
+            <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14, fontWeight: 800, fontFamily: "'Cairo', sans-serif" }}>فريق ١</span>
+            <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: 20, fontWeight: 900, fontFamily: "'Cairo', sans-serif" }}>{team1Score}</span>
+            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14, margin: '0 4px' }}>|</span>
+            <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: 700, fontFamily: "'Cairo', sans-serif" }}>رمز الغرفة</span>
+            <span style={{ color: '#fff', fontSize: 18, fontWeight: 900, letterSpacing: '0.15em', fontFamily: "'Cairo', sans-serif" }}>{session.roomCode}</span>
           </div>
 
           {/* Grid area */}
@@ -859,8 +874,15 @@ export function HostDashboard() {
               background: `linear-gradient(90deg, ${session.team2Color}CC, ${session.team2Color}AA)`,
               flexShrink: 0,
               boxShadow: `0 -2px 12px ${session.team2Color}44`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
             }}
-          />
+          >
+            <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14, fontWeight: 800, fontFamily: "'Cairo', sans-serif" }}>فريق ٢</span>
+            <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: 20, fontWeight: 900, fontFamily: "'Cairo', sans-serif" }}>{team2Score}</span>
+          </div>
         </div>
       </div>
       )}
@@ -872,7 +894,7 @@ export function HostDashboard() {
           team1Color={session.team1Color}
           team2Color={session.team2Color}
           onNewRound={() => newRoundMutation.mutate()}
-          onBack={() => navigate('/')}
+          onEndGame={handleEndGame}
         />
       )}
 
@@ -899,7 +921,7 @@ export function HostDashboard() {
 
       {pendingUnassignCell && (
         <ConfirmDialog
-          message={`إلغاء تعيين الحرف "${pendingUnassignCell.letter}"؟`}
+          message={`الحرف "${pendingUnassignCell.letter}" لـ ${pendingUnassignCell.state === 'AssignedTeam1' ? 'فريق ١' : 'فريق ٢'} — إلغاء التعيين؟`}
           confirmLabel="إلغاء التعيين"
           cancelLabel="رجوع"
           onConfirm={() => {

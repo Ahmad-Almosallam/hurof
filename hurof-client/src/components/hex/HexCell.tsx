@@ -41,7 +41,7 @@ export function HexCell({ cell, team1Color, team2Color, isWinningPath, onClick, 
   const borderBg = getBorderBg(cell.state, team1Color, team2Color);
   const innerBg  = getCellBg(cell.state, team1Color, team2Color);
   const color    = getCellTextColor(cell.state);
-  const cursor   = interactive && cell.state !== 'Active' ? 'pointer' : 'default';
+  const cursor   = interactive ? 'pointer' : 'default';
 
   // Glow color for winning-path animation (matches fill)
   const cellGlow = cell.state === 'AssignedTeam1' ? team1Color
@@ -50,7 +50,7 @@ export function HexCell({ cell, team1Color, team2Color, isWinningPath, onClick, 
 
   return (
     <div
-      className={`hex-cell-border${isWinningPath ? ' winning' : ''}`}
+      className={`hex-cell-border${isWinningPath ? ' winning' : ''}${interactive ? ' transition-all hover:brightness-110' : ''}`}
       style={{
         cursor,
         backgroundColor: borderBg,
