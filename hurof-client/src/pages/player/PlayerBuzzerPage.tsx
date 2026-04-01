@@ -9,7 +9,6 @@ import { useGameHub } from '../../hooks/useGameHub';
 import { queryKeys } from '../../lib/queryKeys';
 import { getSession } from '../../api/sessions';
 import { buzz } from '../../api/buzzer';
-import * as signalR from '@microsoft/signalr';
 import { getHubConnection, stopHubConnection } from '../../lib/signalr';
 import type { BuzzWinnerEvent, GameOverEvent, GameResetEvent } from '../../types/api';
 
@@ -20,6 +19,7 @@ export function PlayerBuzzerPage() {
   const [playerName, setPlayerName]     = useState(() => sessionStorage.getItem('hurof_player') ?? '');
   const [nameSubmitted, setNameSubmitted] = useState(!!sessionStorage.getItem('hurof_player'));
   const [buzzWinner, setBuzzWinner]       = useState<BuzzWinnerEvent | null>(null);
+  const [buzzFailed, setBuzzFailed]       = useState(false);
   const [gameOver, setGameOver]           = useState<GameOverEvent | null>(null);
   const [activeCellId, setActiveCellId]   = useState<string | null>(null);
 
@@ -40,12 +40,7 @@ export function PlayerBuzzerPage() {
 
   useEffect(() => {
     return () => {
-      if (sessionId) {
-        const conn = getHubConnection(sessionId);
-        if (conn.state === signalR.HubConnectionState.Connected) {
-          stopHubConnection(sessionId).catch(() => {});
-        }
-      }
+      if (sessionId) stopHubConnection(sessionId).catch(() => {});
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -68,7 +63,12 @@ export function PlayerBuzzerPage() {
       if (cell.state === 'Active') setActiveCellId(cell.id);
       else setActiveCellId(prev => prev === cell.id ? null : prev);
     }, []),
-    onBuzzWinner:  useCallback((e: BuzzWinnerEvent) => setBuzzWinner(e), []),
+    onBuzzWinner:  useCallback((e: BuzzWinnerEvent) => {
+      setBuzzWinner(e);
+      if (e.playerName === playerName) {
+        navigator.vibrate?.([60, 40, 100]);
+      }
+    }, [playerName]),
     onGameOver:    useCallback((e: GameOverEvent)  => setGameOver(e),   []),
     onBuzzerReset: useCallback(() => setBuzzWinner(null), []),
     onGameReset:   useCallback((_e: GameResetEvent) => {
@@ -77,6 +77,7 @@ export function PlayerBuzzerPage() {
     onReconnected: useCallback(() => {
       queryClient.invalidateQueries({ queryKey: queryKeys.session(sessionId!) });
       refetch().then(result => {
+        if (result.data?.status === 'Ended') { navigate('/'); return; }
         if (result.data?.cells) {
           const active = result.data.cells.find(c => c.state === 'Active');
           setActiveCellId(active?.id ?? null);
@@ -91,15 +92,16 @@ export function PlayerBuzzerPage() {
         const conn = getHubConnection(sessionId);
         conn.invoke('JoinAsPlayer', sessionId, playerName).catch(() => {});
       }
-    }, [queryClient, sessionId, refetch, playerName]),
+    }, [queryClient, sessionId, refetch, playerName, navigate]),
     onKicked:       useCallback(() => navigate('/'), [navigate]),
     onSessionEnded: useCallback(() => navigate('/'), [navigate]),
   });
 
   const buzzMutation = useMutation({
     mutationFn: () => buzz(sessionId!, playerName),
-    onSuccess: (data) => {
-      if (data.accepted) setBuzzWinner({ playerName, lockedAt: new Date().toISOString() });
+    onError: () => {
+      setBuzzFailed(true);
+      setTimeout(() => setBuzzFailed(false), 800);
     },
   });
 
@@ -167,7 +169,7 @@ export function PlayerBuzzerPage() {
   if (!nameSubmitted) {
     return (
       <RtlWrapper>
-        <div className="min-h-dvh flex items-center justify-center p-4" style={{ background: 'var(--void)' }}>
+        <div className="min-h-dvh flex items-start justify-center p-4 pt-[25dvh] pb-52" style={{ background: 'var(--void)' }}>
           <form
             onSubmit={handleNameSubmit}
             className="w-full max-w-xs flex flex-col gap-4"
@@ -220,6 +222,8 @@ export function PlayerBuzzerPage() {
   type BuzzerState = 'canBuzz' | 'won' | 'lost' | 'waiting';
   const buzzerState: BuzzerState = isLocked ? (iWon ? 'won' : 'lost') : !hasActiveLetter ? 'waiting' : 'canBuzz';
 
+  const isPending = buzzMutation.isPending;
+
   /* ── Cinematic ambient config per state ── */
   const ambientConfig = {
     canBuzz: {
@@ -246,43 +250,47 @@ export function PlayerBuzzerPage() {
 
   const buzzerConfig = {
     canBuzz: {
-      bg:    'linear-gradient(145deg, #B8922A 0%, var(--gold) 35%, var(--gold-bright) 65%, var(--gold-2) 100%)',
-      glow:  '0 0 0 1px rgba(255,255,255,0.15) inset, 0 -4px 0 rgba(0,0,0,0.4) inset, 0 4px 0 rgba(255,255,255,0.12) inset, 0 8px 50px rgba(201,168,76,0.55), 0 0 120px rgba(201,168,76,0.2)',
-      color: '#02020A',
-      icon:  null,
-      text:  'اضغط!',
-      ring:  true,
+      bg:      'linear-gradient(145deg, #B8922A 0%, var(--gold) 35%, var(--gold-bright) 65%, var(--gold-2) 100%)',
+      glow:    '0 0 0 1px rgba(255,255,255,0.15) inset, 0 -4px 0 rgba(0,0,0,0.4) inset, 0 4px 0 rgba(255,255,255,0.12) inset, 0 8px 50px rgba(201,168,76,0.55), 0 0 120px rgba(201,168,76,0.2)',
+      color:   '#02020A',
+      icon:    null,
+      text:    'اضغط!',
+      subtext: '',
+      ring:    true,
     },
     won: {
-      bg:    'linear-gradient(145deg, #14532d 0%, #16a34a 40%, #4ade80 80%, #86efac 100%)',
-      glow:  '0 0 0 1px rgba(255,255,255,0.15) inset, 0 -4px 0 rgba(0,0,0,0.4) inset, 0 4px 0 rgba(255,255,255,0.15) inset, 0 8px 50px rgba(74,222,128,0.5), 0 0 120px rgba(74,222,128,0.2)',
-      color: '#fff',
-      icon:  <Trophy size={32} aria-hidden="true" />,
-      text:  'أنت أول!',
-      ring:  false,
+      bg:      'linear-gradient(145deg, #14532d 0%, #16a34a 40%, #4ade80 80%, #86efac 100%)',
+      glow:    '0 0 0 1px rgba(255,255,255,0.15) inset, 0 -4px 0 rgba(0,0,0,0.4) inset, 0 4px 0 rgba(255,255,255,0.15) inset, 0 8px 50px rgba(74,222,128,0.5), 0 0 120px rgba(74,222,128,0.2)',
+      color:   '#fff',
+      icon:    <Trophy size={32} aria-hidden="true" />,
+      text:    'أنت أول!',
+      subtext: '',
+      ring:    false,
     },
     lost: {
-      bg:    'linear-gradient(145deg, #0a0b0e, #13151c)',
-      glow:  '0 0 0 1px rgba(255,255,255,0.05) inset, 0 4px 20px rgba(0,0,0,0.6)',
-      color: 'var(--cream-2)',
-      icon:  <Lock size={22} aria-hidden="true" style={{ opacity: 0.6 }} />,
-      text:  buzzWinner?.playerName ?? '',
-      ring:  false,
+      bg:      'linear-gradient(145deg, #0a0b0e, #13151c)',
+      glow:    '0 0 0 1px rgba(255,255,255,0.05) inset, 0 4px 20px rgba(0,0,0,0.6)',
+      color:   'var(--cream-2)',
+      icon:    <Lock size={22} aria-hidden="true" style={{ opacity: 0.6 }} />,
+      text:    'سبقك!',
+      subtext: buzzWinner?.playerName ?? '',
+      ring:    false,
     },
     waiting: {
-      bg:    'linear-gradient(145deg, #0a0b0e, #13151c)',
-      glow:  '0 0 0 1px rgba(255,255,255,0.04) inset, 0 4px 20px rgba(0,0,0,0.5)',
-      color: 'rgba(255,255,255,0.2)',
-      icon:  null,
-      text:  'انتظر...',
-      ring:  false,
+      bg:      'linear-gradient(145deg, #0a0b0e, #13151c)',
+      glow:    '0 0 0 1px rgba(255,255,255,0.04) inset, 0 4px 20px rgba(0,0,0,0.5)',
+      color:   'rgba(255,255,255,0.2)',
+      icon:    null,
+      text:    'انتظر...',
+      subtext: '',
+      ring:    false,
     },
   }[buzzerState];
 
   return (
     <RtlWrapper>
       <div
-        className="relative min-h-dvh flex flex-col items-center justify-center gap-10 overflow-hidden"
+        className="relative min-h-dvh flex flex-col items-center justify-center gap-7 overflow-hidden"
         style={{
           background: 'var(--void)',
           padding: 'calc(1.5rem + env(safe-area-inset-top, 0px)) calc(1.5rem + env(safe-area-inset-right, 0px)) calc(1.5rem + env(safe-area-inset-bottom, 0px)) calc(1.5rem + env(safe-area-inset-left, 0px))',
@@ -322,7 +330,7 @@ export function PlayerBuzzerPage() {
           <button
             onClick={handleChangeName}
             className="text-xs font-arabic transition-all hover:opacity-80"
-            style={{ color: 'var(--cream-2)', opacity: 0.5 }}
+            style={{ color: 'var(--cream-2)', opacity: 0.65 }}
           >
             تغيير الاسم
           </button>
@@ -367,33 +375,51 @@ export function PlayerBuzzerPage() {
 
           <button
             onClick={() => {
-              if (!canBuzz) return;
+              if (!canBuzz || isPending) return;
               navigator.vibrate?.(15);
               buzzMutation.mutate();
             }}
-            disabled={!canBuzz}
+            disabled={!canBuzz || isPending}
             aria-label={canBuzz ? 'اضغط الجرس' : buzzerConfig.text}
             className="relative w-60 h-60 rounded-full font-black font-arabic transition-all flex flex-col items-center justify-center gap-2.5 active:scale-[0.92]"
             style={{
               background: buzzerConfig.bg,
               color: buzzerConfig.color,
-              boxShadow: buzzerConfig.glow,
-              fontSize: buzzerState === 'lost' ? '1rem' : '1.9rem',
-              transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
+              boxShadow: buzzFailed
+                ? '0 0 0 4px rgba(248,113,113,0.7), 0 8px 50px rgba(248,113,113,0.4)'
+                : buzzerConfig.glow,
+              fontSize: buzzerState === 'lost' ? '1.5rem' : '1.9rem',
+              transition: buzzFailed ? 'box-shadow 0.1s ease' : 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
               border: 'none',
+              opacity: isPending ? 0.7 : 1,
+              transform: isPending ? 'scale(0.97)' : undefined,
             }}
           >
             {buzzerConfig.icon}
-            <span style={{ lineHeight: 1 }}>{buzzerConfig.text}</span>
+            <span style={{ lineHeight: 1 }}>{isPending ? 'جارٍ...' : buzzerConfig.text}</span>
+            {buzzerConfig.subtext ? (
+              <span style={{ fontSize: '0.85rem', opacity: 0.7, lineHeight: 1, fontWeight: 700 }}>
+                {buzzerConfig.subtext}
+              </span>
+            ) : null}
           </button>
         </div>
+
+        {buzzerState === 'waiting' && (
+          <span
+            className="text-sm font-arabic"
+            style={{ color: 'rgba(255,255,255,0.3)' }}
+          >
+            انتظر اختيار الحرف
+          </span>
+        )}
 
         <ConnectionStatus state={connectionState} />
 
         <button
           onClick={handleExit}
           className="relative text-xs font-arabic transition-all hover:opacity-60"
-          style={{ color: 'var(--cream-2)', opacity: 0.35 }}
+          style={{ color: 'var(--cream-2)', opacity: 0.65 }}
         >
           الخروج من اللعبة
         </button>

@@ -77,7 +77,7 @@ export function MobileSettingsSheet({
           <div className="flex flex-col gap-4">
             <div className="flex gap-3">
               <div className="flex-1 flex flex-col gap-1">
-                <label className="text-xs text-center font-arabic" style={{ color: 'var(--cream-2)' }}>وقت الطارئ (ث)</label>
+                <label className="text-xs text-center font-arabic" style={{ color: 'var(--cream-2)' }}>وقت الضغط (ث)</label>
                 <input
                   type="number"
                   min={0}
@@ -89,7 +89,7 @@ export function MobileSettingsSheet({
                 />
               </div>
               <div className="flex-1 flex flex-col gap-1">
-                <label className="text-xs text-center font-arabic" style={{ color: 'var(--cream-2)' }}>وقت الفريق (ث)</label>
+                <label className="text-xs text-center font-arabic" style={{ color: 'var(--cream-2)' }}>وقت التفكير (ث)</label>
                 <input
                   type="number"
                   min={0}
@@ -131,9 +131,9 @@ export function MobileSettingsSheet({
                 لا يوجد لاعبون متصلون
               </div>
             ) : (
-              players.map((name, i) => (
+              players.map((name) => (
                 <div
-                  key={i}
+                  key={name}
                   className="flex items-center gap-3 rounded-xl px-4 py-2.5"
                   style={{ background: 'var(--elevated)', border: '1px solid rgba(201,168,76,0.1)' }}
                 >

@@ -1,13 +1,89 @@
-import { useEffect, useMemo } from 'react';
-import { RotateCcw, Home } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { RotateCcw, LogOut } from 'lucide-react';
 
 interface GameOverBannerProps {
   winnerTeam: number | null;
   team1Color: string;
   team2Color: string;
   onDone?: () => void;
-  onBack?: () => void;
+  onEndGame?: () => void;
   onNewRound?: () => void;
+}
+
+const HOLD_MS = 600;
+
+/** Button that fires onConfirm only after being held for HOLD_MS ms.
+ *  Shows a left-to-right fill bar during the hold. */
+function HoldButton({
+  onConfirm,
+  children,
+  className,
+  style,
+}: {
+  onConfirm: () => void;
+  children: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  const [progress, setProgress] = useState(0); // 0–100
+  const raf = useRef<number | null>(null);
+  const startTime = useRef<number | null>(null);
+
+  const cancel = () => {
+    if (raf.current !== null) { cancelAnimationFrame(raf.current); raf.current = null; }
+    startTime.current = null;
+    setProgress(0);
+  };
+
+  const tick = (now: number) => {
+    if (startTime.current === null) return;
+    const elapsed = now - startTime.current;
+    const pct = Math.min(100, (elapsed / HOLD_MS) * 100);
+    setProgress(pct);
+    if (elapsed >= HOLD_MS) {
+      cancel();
+      onConfirm();
+    } else {
+      raf.current = requestAnimationFrame(tick);
+    }
+  };
+
+  const start = () => {
+    cancel();
+    startTime.current = performance.now();
+    raf.current = requestAnimationFrame(tick);
+  };
+
+  useEffect(() => cancel, []); // cleanup on unmount
+
+  return (
+    <button
+      onPointerDown={start}
+      onPointerUp={cancel}
+      onPointerLeave={cancel}
+      className={className}
+      style={{ ...style, position: 'relative', overflow: 'hidden', userSelect: 'none' }}
+    >
+      {/* Fill bar */}
+      {progress > 0 && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'rgba(255,255,255,0.18)',
+            transformOrigin: 'right center',
+            transform: `scaleX(${progress / 100})`,
+            transition: 'none',
+            pointerEvents: 'none',
+          }}
+        />
+      )}
+      <span style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+        {children}
+      </span>
+    </button>
+  );
 }
 
 const CONFETTI_COUNT = 110;
@@ -70,7 +146,7 @@ function StarOrnament({ color }: { color: string }) {
   );
 }
 
-export function GameOverBanner({ winnerTeam, team1Color, team2Color, onDone, onBack, onNewRound }: GameOverBannerProps) {
+export function GameOverBanner({ winnerTeam, team1Color, team2Color, onDone, onEndGame, onNewRound }: GameOverBannerProps) {
   const winnerColor = winnerTeam === 1 ? team1Color : winnerTeam === 2 ? team2Color : '#6b7280';
   const winnerLabel = winnerTeam === 1 ? 'فريق ١' : winnerTeam === 2 ? 'فريق ٢' : null;
 
@@ -180,6 +256,10 @@ export function GameOverBanner({ winnerTeam, team1Color, team2Color, onDone, onB
               textShadow: `0 0 60px ${winnerColor}88, 0 0 120px ${winnerColor}44, 0 0 200px ${winnerColor}22`,
               lineHeight: 1,
               animation: 'winner-pop 0.6s 0.24s cubic-bezier(0.34,1.56,0.64,1) both',
+              maxWidth: '80vw',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
             }}
           >
             {winnerLabel}
@@ -199,9 +279,9 @@ export function GameOverBanner({ winnerTeam, team1Color, team2Color, onDone, onB
         style={{ animation: 'winner-pop 0.5s 0.48s cubic-bezier(0.34,1.56,0.64,1) both' }}
       >
         {onNewRound && (
-          <button
-            onClick={onNewRound}
-            className="flex items-center gap-2.5 px-8 py-3 rounded-2xl font-bold text-lg font-arabic transition-all hover:brightness-115 active:scale-[0.97]"
+          <HoldButton
+            onConfirm={onNewRound}
+            className="flex items-center gap-2.5 px-8 py-3 rounded-2xl font-bold text-lg font-arabic transition-all hover:brightness-115"
             style={{
               background: 'linear-gradient(135deg, var(--gold-dim), var(--gold), var(--gold-bright))',
               color: '#020208',
@@ -209,23 +289,26 @@ export function GameOverBanner({ winnerTeam, team1Color, team2Color, onDone, onB
             }}
           >
             <RotateCcw size={18} aria-hidden="true" />
-            جولة جديدة
-          </button>
+            <span style={{ display: 'flex', flexDirection: 'column', gap: 1, textAlign: 'center' }}>
+              <span>جولة جديدة</span>
+              <span style={{ fontSize: '0.65rem', fontWeight: 600, opacity: 0.6 }}>اضغط مطولاً</span>
+            </span>
+          </HoldButton>
         )}
-        {onBack && (
+        {onEndGame && (
           <button
-            onClick={onBack}
+            onClick={onEndGame}
             className="flex items-center gap-2 px-7 py-3 rounded-2xl font-bold text-lg font-arabic transition-all hover:brightness-110 active:scale-[0.97]"
             style={{
-              background: 'rgba(255,255,255,0.04)',
-              color: 'var(--cream)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              background: 'rgba(239,68,68,0.1)',
+              color: '#f87171',
+              border: '1px solid rgba(239,68,68,0.25)',
               backdropFilter: 'blur(12px)',
               boxShadow: '0 4px 24px rgba(0,0,0,0.5)',
             }}
           >
-            <Home size={16} aria-hidden="true" />
-            الرئيسية
+            <LogOut size={16} aria-hidden="true" />
+            إنهاء اللعبة
           </button>
         )}
       </div>
