@@ -5,12 +5,13 @@ import { Lock, Trophy, Loader, XCircle } from 'lucide-react';
 import { RtlWrapper } from '../../components/layout/RtlWrapper';
 import { GameOverBanner } from '../../components/ui/GameOverBanner';
 import { ConnectionStatus } from '../../components/ui/ConnectionStatus';
+import { GameEndLeaderboardOverlay } from '../../components/ui/GameEndLeaderboardOverlay';
 import { useGameHub } from '../../hooks/useGameHub';
 import { queryKeys } from '../../lib/queryKeys';
 import { getSession } from '../../api/sessions';
 import { buzz } from '../../api/buzzer';
 import { getHubConnection, stopHubConnection } from '../../lib/signalr';
-import type { BuzzWinnerEvent, GameOverEvent, GameResetEvent } from '../../types/api';
+import type { BuzzWinnerEvent, GameOverEvent, GameResetEvent, LeaderboardEntry, LeaderboardUpdatedEvent } from '../../types/api';
 
 export function PlayerBuzzerPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -21,6 +22,7 @@ export function PlayerBuzzerPage() {
   const [buzzWinner, setBuzzWinner]       = useState<BuzzWinnerEvent | null>(null);
   const [buzzFailed, setBuzzFailed]       = useState(false);
   const [gameOver, setGameOver]           = useState<GameOverEvent | null>(null);
+  const [leaderboard, setLeaderboard]     = useState<LeaderboardEntry[]>([]);
   const [activeCellId, setActiveCellId]   = useState<string | null>(null);
 
   const { data: session, isLoading, refetch } = useQuery({
@@ -69,11 +71,15 @@ export function PlayerBuzzerPage() {
         navigator.vibrate?.([60, 40, 100]);
       }
     }, [playerName]),
-    onGameOver:    useCallback((e: GameOverEvent)  => setGameOver(e),   []),
+    onGameOver: useCallback((e: GameOverEvent) => {
+      setGameOver(e);
+      if (e.leaderboard) setLeaderboard(e.leaderboard);
+    }, []),
     onBuzzerReset: useCallback(() => setBuzzWinner(null), []),
     onGameReset:   useCallback((_e: GameResetEvent) => {
-      setGameOver(null); setBuzzWinner(null); setActiveCellId(null);
+      setGameOver(null); setBuzzWinner(null); setLeaderboard([]); setActiveCellId(null);
     }, []),
+    onLeaderboardUpdated: useCallback((e: LeaderboardUpdatedEvent) => setLeaderboard(e.entries), []),
     onReconnected: useCallback(() => {
       queryClient.invalidateQueries({ queryKey: queryKeys.session(sessionId!) });
       refetch().then(result => {
@@ -425,7 +431,10 @@ export function PlayerBuzzerPage() {
         </button>
       </div>
 
-      {gameOver && (
+      {gameOver && leaderboard.length > 0 && (
+        <GameEndLeaderboardOverlay entries={leaderboard} currentPlayerName={playerName} />
+      )}
+      {gameOver && leaderboard.length === 0 && (
         <GameOverBanner
           winnerTeam={gameOver.winnerTeam}
           team1Color={session.team1Color}

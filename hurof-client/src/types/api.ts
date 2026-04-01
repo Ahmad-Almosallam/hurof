@@ -51,6 +51,7 @@ export interface BuzzResponse {
 export interface GameOverEvent {
   winnerTeam: number | null;
   winningPath: GridPosition[] | null;
+  leaderboard?: LeaderboardEntry[] | null;
 }
 
 export interface GameResetEvent {
@@ -67,4 +68,16 @@ export interface BuzzWinnerEvent {
 export interface TimerStartedEvent {
   durationSeconds: number;
   phase: 1 | 2;
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  playerName: string;
+  correctAnswersCount: number;
+  activeStreak: number;
+  longestStreak: number;
+}
+
+export interface LeaderboardUpdatedEvent {
+  entries: LeaderboardEntry[];
 }

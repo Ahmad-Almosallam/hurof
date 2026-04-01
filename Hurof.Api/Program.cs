@@ -78,6 +78,7 @@ builder.Services.AddScoped<IGridGeneratorService, GridGeneratorService>();
 builder.Services.AddSingleton<IJwtService, JwtService>();
 builder.Services.AddSingleton<IPlayerTrackerService, PlayerTrackerService>();
 builder.Services.AddSingleton<IHostTrackerService, HostTrackerService>();
+builder.Services.AddSingleton<ILeaderboardService, LeaderboardService>();
 
 var app = builder.Build();
 
