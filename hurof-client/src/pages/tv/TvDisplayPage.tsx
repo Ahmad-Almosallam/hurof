@@ -30,6 +30,14 @@ export function TvDisplayPage() {
   const [timerTotal, setTimerTotal]   = useState(0);
   const tvTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [sessionEndedCountdown, setSessionEndedCountdown] = useState<number | null>(null);
+  const [isNarrow, setIsNarrow] = useState(() => window.innerWidth < 860);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 859px)');
+    const handler = (e: MediaQueryListEvent) => setIsNarrow(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   const clearTvTimer = useCallback(() => {
     if (tvTimerRef.current) { clearInterval(tvTimerRef.current); tvTimerRef.current = null; }
@@ -137,54 +145,79 @@ export function TvDisplayPage() {
           backdropFilter: 'blur(20px)',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
           boxShadow: '0 1px 0 rgba(201,168,76,0.08)',
-          paddingTop:    'calc(0.6rem + env(safe-area-inset-top, 0px))',
-          paddingBottom: '0.6rem',
-          paddingLeft:   'calc(1rem + env(safe-area-inset-left, 0px))',
-          paddingRight:  'calc(1rem + env(safe-area-inset-right, 0px))',
+          paddingTop:    'calc(clamp(0.4rem, 1.2vh, 0.9rem) + env(safe-area-inset-top, 0px))',
+          paddingBottom: 'clamp(0.4rem, 1.2vh, 0.9rem)',
+          paddingLeft:   'calc(clamp(0.75rem, 2.5vw, 2rem) + env(safe-area-inset-left, 0px))',
+          paddingRight:  'calc(clamp(0.75rem, 2.5vw, 2rem) + env(safe-area-inset-right, 0px))',
+          gap: 'clamp(0.5rem, 2vw, 1.5rem)',
         }}>
-          <div className="flex items-center gap-2.5">
+          <div style={{ flexShrink: 0 }}>
             <TeamScoreBadge label="فريق ١" score={team1Score} color={session.team1Color} />
           </div>
 
           {/* Center: logo + room code */}
-          <div className="flex items-center gap-3">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 1.5vw, 1rem)', flexShrink: 1, minWidth: 0 }}>
             <span style={{
               fontFamily: "'Amiri', serif",
-              fontSize: '1.4rem',
+              fontSize: 'clamp(1rem, 2.2vw, 1.8rem)',
               fontWeight: 700,
               background: 'linear-gradient(135deg, var(--gold-dim), var(--gold-2))',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
+              whiteSpace: 'nowrap',
             }}>
               حروف
             </span>
             <div
-              className="flex items-center gap-1.5 px-3 py-1 rounded-xl"
               style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'clamp(0.3rem, 0.8vw, 0.6rem)',
+                padding: 'clamp(0.2rem, 0.5vh, 0.4rem) clamp(0.5rem, 1.2vw, 0.9rem)',
+                borderRadius: '0.75rem',
                 background: 'rgba(201,168,76,0.08)',
                 border: '1px solid rgba(201,168,76,0.2)',
                 backdropFilter: 'blur(8px)',
+                flexShrink: 1,
+                minWidth: 0,
               }}
             >
-              <span className="text-xs font-arabic" style={{ color: 'var(--cream-2)', opacity: 0.6 }}>
-                غرفة
-              </span>
-              <span className="font-black text-base tracking-widest font-arabic" style={{ color: 'var(--gold)', letterSpacing: '0.12em' }}>
+              {!isNarrow && (
+                <span style={{
+                  fontSize: 'clamp(0.55rem, 1vw, 0.75rem)',
+                  fontFamily: "'Cairo', sans-serif",
+                  color: 'var(--cream-2)',
+                  opacity: 0.6,
+                  whiteSpace: 'nowrap',
+                }}>
+                  غرفة
+                </span>
+              )}
+              <span style={{
+                fontSize: 'clamp(0.75rem, 1.5vw, 1.1rem)',
+                fontWeight: 900,
+                letterSpacing: '0.12em',
+                fontFamily: "'Cairo', sans-serif",
+                color: 'var(--gold)',
+                whiteSpace: 'nowrap',
+              }}>
                 {session.roomCode}
               </span>
             </div>
           </div>
 
-          <TeamScoreBadge label="فريق ٢" score={team2Score} color={session.team2Color} />
+          <div style={{ flexShrink: 0 }}>
+            <TeamScoreBadge label="فريق ٢" score={team2Score} color={session.team2Color} />
+          </div>
         </div>
 
         {/* ── Grid + Leaderboard row ── */}
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-          {/* Grid — fills most of the space */}
+          {/* Grid — fills all remaining space */}
           <div
             ref={setGridContainer}
-            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
+            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', minWidth: 0 }}
           >
             <HexGrid
               cells={cells}
@@ -197,22 +230,24 @@ export function TvDisplayPage() {
             />
           </div>
 
-          {/* Leaderboard sidebar */}
-          <div
-            style={{
-              width: 180,
-              flexShrink: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              padding: '0.75rem 0.5rem',
-              borderLeft: '1px solid rgba(255,255,255,0.05)',
-              background: 'rgba(2,2,3,0.6)',
-              backdropFilter: 'blur(12px)',
-              overflowY: 'auto',
-            }}
-          >
-            <LeaderboardPanel entries={leaderboard} />
-          </div>
+          {/* Leaderboard sidebar — hidden on narrow screens */}
+          {!isNarrow && (
+            <div
+              style={{
+                width: 'clamp(140px, 14vw, 240px)',
+                flexShrink: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                padding: 'clamp(0.5rem, 1vh, 1rem) clamp(0.4rem, 0.8vw, 0.75rem)',
+                borderLeft: '1px solid rgba(255,255,255,0.05)',
+                background: 'rgba(2,2,3,0.6)',
+                backdropFilter: 'blur(12px)',
+                overflowY: 'auto',
+              }}
+            >
+              <LeaderboardPanel entries={leaderboard} />
+            </div>
+          )}
         </div>
       </div>
 
@@ -238,8 +273,11 @@ export function TvDisplayPage() {
       )}
       {connectionState !== 'Connected' && (
         <div
-          className="fixed inset-0 flex flex-col items-center justify-center z-50 gap-4"
           style={{
+            position: 'fixed', inset: 0,
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            zIndex: 50, gap: 'clamp(0.75rem, 2vh, 1.5rem)',
             background: connectionState === 'Disconnected'
               ? 'rgba(2,2,3,0.90)'
               : 'rgba(2,2,3,0.72)',
@@ -249,7 +287,9 @@ export function TvDisplayPage() {
         >
           <div
             style={{
-              width: 48, height: 48, borderRadius: '50%',
+              width: 'clamp(36px, 4vw, 56px)',
+              height: 'clamp(36px, 4vw, 56px)',
+              borderRadius: '50%',
               border: '4px solid rgba(201,168,76,0.25)',
               borderTopColor: 'var(--gold)',
               animation: 'spin 1s linear infinite',
@@ -258,8 +298,13 @@ export function TvDisplayPage() {
           />
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
           <div
-            className="font-bold font-arabic"
-            style={{ fontSize: 'clamp(1.5rem, 5vw, 2.5rem)', color: 'var(--cream)', textAlign: 'center' }}
+            style={{
+              fontSize: 'clamp(1.2rem, 4vw, 2.5rem)',
+              fontWeight: 700,
+              fontFamily: "'Amiri', serif",
+              color: 'var(--cream)',
+              textAlign: 'center',
+            }}
           >
             {connectionState === 'Disconnected' ? 'انقطع الاتصال' : 'جارٍ إعادة الاتصال...'}
           </div>
@@ -268,14 +313,20 @@ export function TvDisplayPage() {
 
       {sessionEndedCountdown !== null && (
         <div
-          className="fixed inset-0 flex flex-col items-center justify-center z-[60] gap-4"
-          style={{ background: 'rgba(2,2,3,0.94)', backdropFilter: 'blur(16px)' }}
+          style={{
+            position: 'fixed', inset: 0,
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            zIndex: 60, gap: 'clamp(0.75rem, 2vh, 1.5rem)',
+            background: 'rgba(2,2,3,0.94)',
+            backdropFilter: 'blur(16px)',
+          }}
         >
           <div
-            className="font-bold font-arabic"
             style={{
               fontFamily: "'Amiri', serif",
-              fontSize: 'clamp(2.5rem, 8vw, 4rem)',
+              fontSize: 'clamp(2rem, 7vw, 4.5rem)',
+              fontWeight: 700,
               color: 'var(--cream)',
               textShadow: '0 0 40px rgba(201,168,76,0.25)',
             }}
@@ -283,11 +334,14 @@ export function TvDisplayPage() {
             انتهت الجلسة
           </div>
           <div
-            className="font-arabic"
-            style={{ color: 'rgba(255,255,255,0.35)', fontSize: '1.1rem' }}
+            style={{
+              fontFamily: "'Cairo', sans-serif",
+              fontSize: 'clamp(0.85rem, 1.8vw, 1.2rem)',
+              color: 'rgba(255,255,255,0.35)',
+            }}
           >
             العودة للرئيسية خلال{' '}
-            <span className="timer-num font-bold" style={{ color: 'var(--gold-2)' }}>
+            <span className="timer-num" style={{ fontWeight: 700, color: 'var(--gold-2)' }}>
               {sessionEndedCountdown}
             </span>{' '}
             ثوانٍ...
