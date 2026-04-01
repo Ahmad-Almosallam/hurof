@@ -7,19 +7,22 @@ import { BuzzBanner } from '../../components/ui/BuzzBanner';
 import { GameOverBanner } from '../../components/ui/GameOverBanner';
 import { TimerOverlay } from '../../components/ui/TimerOverlay';
 import { TeamScoreBadge } from '../../components/ui/TeamScoreBadge';
+import { LeaderboardPanel } from '../../components/ui/LeaderboardPanel';
+import { GameEndLeaderboardOverlay } from '../../components/ui/GameEndLeaderboardOverlay';
 import { useGameHub } from '../../hooks/useGameHub';
 import { useGridScale } from '../../hooks/useGridScale';
 import { queryKeys } from '../../lib/queryKeys';
 import { getSession } from '../../api/sessions';
-import type { BuzzWinnerEvent, GameOverEvent, GameResetEvent, LetterCellResponse, TimerStartedEvent } from '../../types/api';
+import type { BuzzWinnerEvent, GameOverEvent, GameResetEvent, LeaderboardEntry, LeaderboardUpdatedEvent, LetterCellResponse, TimerStartedEvent } from '../../types/api';
 
 export function TvDisplayPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate      = useNavigate();
   const queryClient   = useQueryClient();
-  const [cells, setCells]           = useState<LetterCellResponse[]>([]);
-  const [buzzWinner, setBuzzWinner]   = useState<BuzzWinnerEvent | null>(null);
-  const [gameOver, setGameOver]       = useState<GameOverEvent | null>(null);
+  const [cells, setCells]                 = useState<LetterCellResponse[]>([]);
+  const [buzzWinner, setBuzzWinner]       = useState<BuzzWinnerEvent | null>(null);
+  const [gameOver, setGameOver]           = useState<GameOverEvent | null>(null);
+  const [leaderboard, setLeaderboard]     = useState<LeaderboardEntry[]>([]);
   const [gridContainer, setGridContainer] = useState<HTMLDivElement | null>(null);
 
   const [timerSecondsLeft, setTimerSecondsLeft] = useState(0);
@@ -53,11 +56,15 @@ export function TvDisplayPage() {
       setCells(prev => prev.map(c => c.id === cell.id ? cell : c));
     }, []),
     onBuzzWinner:  useCallback((e: BuzzWinnerEvent) => setBuzzWinner(e), []),
-    onGameOver:    useCallback((e: GameOverEvent)   => setGameOver(e),  []),
+    onGameOver: useCallback((e: GameOverEvent) => {
+      setGameOver(e);
+      if (e.leaderboard) setLeaderboard(e.leaderboard);
+    }, []),
     onBuzzerReset: useCallback(() => { setBuzzWinner(null); clearTvTimer(); }, [clearTvTimer]),
     onGameReset:   useCallback((e: GameResetEvent) => {
-      setCells(e.cells); setGameOver(null); setBuzzWinner(null); clearTvTimer();
+      setCells(e.cells); setGameOver(null); setBuzzWinner(null); setLeaderboard([]); clearTvTimer();
     }, [clearTvTimer]),
+    onLeaderboardUpdated: useCallback((e: LeaderboardUpdatedEvent) => setLeaderboard(e.entries), []),
     onTimerStarted: useCallback((e: TimerStartedEvent) => {
       if (tvTimerRef.current) { clearInterval(tvTimerRef.current); tvTimerRef.current = null; }
       setTimerSecondsLeft(e.durationSeconds);
@@ -172,20 +179,40 @@ export function TvDisplayPage() {
           <TeamScoreBadge label="فريق ٢" score={team2Score} color={session.team2Color} />
         </div>
 
-        {/* ── Grid — fills remaining space ── */}
-        <div
-          ref={setGridContainer}
-          style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
-        >
-          <HexGrid
-            cells={cells}
-            gridSize={session.gridSize}
-            team1Color={session.team1Color}
-            team2Color={session.team2Color}
-            winningPath={winningPath}
-            interactive={false}
-            scale={gridScale}
-          />
+        {/* ── Grid + Leaderboard row ── */}
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+          {/* Grid — fills most of the space */}
+          <div
+            ref={setGridContainer}
+            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
+          >
+            <HexGrid
+              cells={cells}
+              gridSize={session.gridSize}
+              team1Color={session.team1Color}
+              team2Color={session.team2Color}
+              winningPath={winningPath}
+              interactive={false}
+              scale={gridScale}
+            />
+          </div>
+
+          {/* Leaderboard sidebar */}
+          <div
+            style={{
+              width: 180,
+              flexShrink: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '0.75rem 0.5rem',
+              borderLeft: '1px solid rgba(255,255,255,0.05)',
+              background: 'rgba(2,2,3,0.6)',
+              backdropFilter: 'blur(12px)',
+              overflowY: 'auto',
+            }}
+          >
+            <LeaderboardPanel entries={leaderboard} />
+          </div>
         </div>
       </div>
 
@@ -199,7 +226,10 @@ export function TvDisplayPage() {
       {!buzzWinner && timerSecondsLeft > 0 && timerPhase !== null && (
         <TimerOverlay secondsLeft={timerSecondsLeft} totalSeconds={timerTotal} phase={timerPhase} />
       )}
-      {gameOver && (
+      {gameOver && leaderboard.length > 0 && (
+        <GameEndLeaderboardOverlay entries={leaderboard} />
+      )}
+      {gameOver && leaderboard.length === 0 && (
         <GameOverBanner
           winnerTeam={gameOver.winnerTeam}
           team1Color={session.team1Color}

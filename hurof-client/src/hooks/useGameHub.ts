@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import * as signalR from '@microsoft/signalr';
 import { getHubConnection } from '../lib/signalr';
-import type { BuzzWinnerEvent, GameOverEvent, GameResetEvent, LetterCellResponse, TimerStartedEvent } from '../types/api';
+import type { BuzzWinnerEvent, GameOverEvent, GameResetEvent, LeaderboardUpdatedEvent, LetterCellResponse, TimerStartedEvent } from '../types/api';
 
 export type ConnectionState = 'Connected' | 'Reconnecting' | 'Disconnected';
 
@@ -13,6 +13,7 @@ interface GameHubCallbacks {
   onGameReset?: (event: GameResetEvent) => void;
   onPlayerListUpdate?: (players: string[]) => void;
   onTimerStarted?: (event: TimerStartedEvent) => void;
+  onLeaderboardUpdated?: (event: LeaderboardUpdatedEvent) => void;
   onConnected?: () => void;
   onReconnected?: () => void;
   onKicked?: () => void;
@@ -56,6 +57,7 @@ export function useGameHub(sessionId: string, callbacks: GameHubCallbacks): { co
     const onGameReset       = (e: GameResetEvent)         => callbacksRef.current.onGameReset?.(e);
     const onPlayerListUpdate = (players: string[])        => callbacksRef.current.onPlayerListUpdate?.(players);
     const onTimerStarted    = (e: TimerStartedEvent)      => callbacksRef.current.onTimerStarted?.(e);
+    const onLeaderboardUpdated = (e: LeaderboardUpdatedEvent) => callbacksRef.current.onLeaderboardUpdated?.(e);
     const onYouWereKicked   = ()                          => callbacksRef.current.onKicked?.();
     const onSessionEnded    = ()                          => callbacksRef.current.onSessionEnded?.();
 
@@ -65,9 +67,10 @@ export function useGameHub(sessionId: string, callbacks: GameHubCallbacks): { co
     conn.on('BuzzerReset',      onBuzzerReset);
     conn.on('GameReset',        onGameReset);
     conn.on('PlayerListUpdate', onPlayerListUpdate);
-    conn.on('TimerStarted',     onTimerStarted);
-    conn.on('YouWereKicked',    onYouWereKicked);
-    conn.on('SessionEnded',     onSessionEnded);
+    conn.on('TimerStarted',        onTimerStarted);
+    conn.on('LeaderboardUpdated',  onLeaderboardUpdated);
+    conn.on('YouWereKicked',       onYouWereKicked);
+    conn.on('SessionEnded',        onSessionEnded);
 
     // ── Lifecycle handlers — registered at most once per connection ──
     // SignalR's onreconnecting/onreconnected/onclose APIs only add callbacks;
@@ -127,9 +130,10 @@ export function useGameHub(sessionId: string, callbacks: GameHubCallbacks): { co
       conn.off('BuzzerReset',      onBuzzerReset);
       conn.off('GameReset',        onGameReset);
       conn.off('PlayerListUpdate', onPlayerListUpdate);
-      conn.off('TimerStarted',     onTimerStarted);
-      conn.off('YouWereKicked',    onYouWereKicked);
-      conn.off('SessionEnded',     onSessionEnded);
+      conn.off('TimerStarted',        onTimerStarted);
+      conn.off('LeaderboardUpdated',  onLeaderboardUpdated);
+      conn.off('YouWereKicked',       onYouWereKicked);
+      conn.off('SessionEnded',        onSessionEnded);
     };
   }, [sessionId]);
 
