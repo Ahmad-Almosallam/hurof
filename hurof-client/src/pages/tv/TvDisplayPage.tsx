@@ -234,11 +234,11 @@ export function TvDisplayPage() {
           {!isNarrow && (
             <div
               style={{
-                width: 'clamp(140px, 14vw, 240px)',
+                width: 'clamp(200px, 22vw, 400px)',
                 flexShrink: 0,
                 display: 'flex',
                 flexDirection: 'column',
-                padding: 'clamp(0.5rem, 1vh, 1rem) clamp(0.4rem, 0.8vw, 0.75rem)',
+                padding: 'clamp(0.6rem, 1.2vh, 1.25rem) clamp(0.5rem, 1vw, 1rem)',
                 borderLeft: '1px solid rgba(255,255,255,0.05)',
                 background: 'rgba(2,2,3,0.6)',
                 backdropFilter: 'blur(12px)',
