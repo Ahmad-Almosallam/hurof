@@ -56,11 +56,11 @@ public class LetterService(
         await hubContext.Clients.Group(session.RoomCode)
             .SendAsync("GridUpdate", cellResponse);
 
-        // Record correct answer for the locked player
-        if (newState is LetterState.AssignedTeam1 or LetterState.AssignedTeam2
-            && session.BuzzerLockedByPlayer is not null)
+        // Record correct answer for whoever buzzed — uses LeaderboardService's own contender
+        // tracking so it works even if the host resets the buzzer before assigning.
+        if (newState is LetterState.AssignedTeam1 or LetterState.AssignedTeam2)
         {
-            await leaderboard.RecordCorrectAnswerAsync(session.RoomCode, session.BuzzerLockedByPlayer);
+            await leaderboard.RecordCorrectAnswerForContenderAsync(session.RoomCode);
         }
 
         // Check for win only on assignment
