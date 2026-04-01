@@ -195,6 +195,11 @@ input:focus-visible {
   100% { opacity: 0;    }
 }
 
+@keyframes buzz-strip-drop {
+  from { transform: translateY(-105%); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+
 @keyframes winner-rays {
   from { transform: rotate(0deg);   opacity: 0.12; }
   to   { transform: rotate(360deg); opacity: 0.12; }
@@ -334,5 +339,6 @@ input:focus-visible {
   @keyframes gold-bloom-pulse { 0%, 100% { box-shadow: 0 0 40px rgba(201,168,76,0.25); } }
   @keyframes winner-rays     { 0%, 100% { transform: none; opacity: 0.08; } }
   @keyframes screen-flash    { 0%, 100% { opacity: 0; } }
-  @keyframes light-ray-pulse { 0%, 100% { opacity: 0.05; } }
+  @keyframes light-ray-pulse  { 0%, 100% { opacity: 0.05; } }
+  @keyframes buzz-strip-drop  { from { transform: none; opacity: 1; } to { transform: none; opacity: 1; } }
 }

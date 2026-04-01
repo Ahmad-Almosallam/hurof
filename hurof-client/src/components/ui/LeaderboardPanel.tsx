@@ -42,9 +42,9 @@ export function LeaderboardPanel({ entries }: Props) {
       {/* ── Header ── */}
       <div
         style={{
-          padding: '0.6rem 0.7rem 0.5rem',
+          padding: 'clamp(0.45rem, 1.2vh, 0.9rem) clamp(0.5rem, 1vw, 0.9rem) clamp(0.35rem, 0.9vh, 0.7rem)',
           borderBottom: '1px solid rgba(201,168,76,0.15)',
-          marginBottom: '0.4rem',
+          marginBottom: 'clamp(0.25rem, 0.6vh, 0.5rem)',
           position: 'relative',
         }}
       >
@@ -52,7 +52,7 @@ export function LeaderboardPanel({ entries }: Props) {
         <div
           style={{
             position: 'absolute',
-            top: 0, right: '0.7rem', left: '0.7rem',
+            top: 0, right: 'clamp(0.5rem, 1vw, 0.9rem)', left: 'clamp(0.5rem, 1vw, 0.9rem)',
             height: '1px',
             background: 'linear-gradient(90deg, transparent, rgba(201,168,76,0.5), transparent)',
           }}
@@ -63,14 +63,14 @@ export function LeaderboardPanel({ entries }: Props) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '0.35rem',
+            gap: 'clamp(0.25rem, 0.5vw, 0.5rem)',
           }}
         >
-          <span style={{ fontSize: '0.75rem' }} aria-hidden="true">🏆</span>
+          <span style={{ fontSize: 'clamp(0.7rem, 1.4vw, 1.1rem)' }} aria-hidden="true">🏆</span>
           <span
             style={{
               fontFamily: "'Amiri', serif",
-              fontSize: '0.85rem',
+              fontSize: 'clamp(0.8rem, 1.5vw, 1.2rem)',
               fontWeight: 700,
               letterSpacing: '0.04em',
               background: 'linear-gradient(135deg, rgba(201,168,76,0.7), var(--gold-2), rgba(201,168,76,0.7))',
@@ -90,8 +90,8 @@ export function LeaderboardPanel({ entries }: Props) {
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          gap: '0.3rem',
-          padding: '0 0.35rem',
+          gap: 'clamp(0.2rem, 0.5vh, 0.45rem)',
+          padding: '0 clamp(0.25rem, 0.5vw, 0.5rem)',
           overflowY: 'auto',
           scrollbarWidth: 'none',
         }}
@@ -108,11 +108,11 @@ export function LeaderboardPanel({ entries }: Props) {
               padding: '1.5rem 0',
             }}
           >
-            <div style={{ fontSize: '1.4rem', opacity: 0.25 }} aria-hidden="true">🏅</div>
+            <div style={{ fontSize: 'clamp(1.1rem, 2.2vw, 1.8rem)', opacity: 0.25 }} aria-hidden="true">🏅</div>
             <span
               style={{
                 fontFamily: "'Amiri', serif",
-                fontSize: '0.75rem',
+                fontSize: 'clamp(0.65rem, 1.2vw, 0.95rem)',
                 color: 'rgba(255,255,255,0.18)',
                 textAlign: 'center',
               }}
@@ -140,8 +140,10 @@ function PanelRow({ entry, index }: { entry: LeaderboardEntry; index: number }) 
         position: 'relative',
         display: 'flex',
         alignItems: 'center',
-        gap: '0.4rem',
-        padding: isFirst ? '0.45rem 0.55rem 0.45rem 0.45rem' : '0.3rem 0.5rem 0.3rem 0.4rem',
+        gap: 'clamp(0.25rem, 0.6vw, 0.55rem)',
+        padding: isFirst
+          ? 'clamp(0.3rem, 0.8vh, 0.6rem) clamp(0.35rem, 0.8vw, 0.7rem)'
+          : 'clamp(0.2rem, 0.5vh, 0.4rem) clamp(0.3rem, 0.6vw, 0.6rem)',
         borderRadius: '0.55rem',
         background: isFirst
           ? 'linear-gradient(135deg, rgba(201,168,76,0.1), rgba(201,168,76,0.04))'
@@ -194,8 +196,8 @@ function PanelRow({ entry, index }: { entry: LeaderboardEntry; index: number }) 
       <div
         style={{
           flexShrink: 0,
-          width: isFirst ? '1.5rem' : '1.2rem',
-          height: isFirst ? '1.5rem' : '1.2rem',
+          width: isFirst ? 'clamp(1.2rem, 2.4vw, 2rem)' : 'clamp(1rem, 1.9vw, 1.6rem)',
+          height: isFirst ? 'clamp(1.2rem, 2.4vw, 2rem)' : 'clamp(1rem, 1.9vw, 1.6rem)',
           borderRadius: '50%',
           display: 'flex',
           alignItems: 'center',
@@ -206,7 +208,7 @@ function PanelRow({ entry, index }: { entry: LeaderboardEntry; index: number }) 
           border: rankMeta
             ? `1px solid ${rankMeta.color}55`
             : '1px solid rgba(255,255,255,0.08)',
-          fontSize: isFirst ? '0.65rem' : '0.55rem',
+          fontSize: isFirst ? 'clamp(0.55rem, 1vw, 0.85rem)' : 'clamp(0.45rem, 0.85vw, 0.7rem)',
           fontWeight: 900,
           color: rankMeta ? rankMeta.color : 'rgba(255,255,255,0.25)',
           transition: 'all 0.3s ease',
@@ -220,7 +222,7 @@ function PanelRow({ entry, index }: { entry: LeaderboardEntry; index: number }) 
         style={{
           flex: 1,
           fontFamily: "'Amiri', serif",
-          fontSize: isFirst ? '0.9rem' : '0.78rem',
+          fontSize: isFirst ? 'clamp(0.75rem, 1.5vw, 1.2rem)' : 'clamp(0.65rem, 1.2vw, 1rem)',
           fontWeight: isFirst ? 700 : 500,
           color: isFirst ? 'var(--cream)' : 'var(--cream-2)',
           overflow: 'hidden',
@@ -242,11 +244,11 @@ function PanelRow({ entry, index }: { entry: LeaderboardEntry; index: number }) 
             display: 'flex',
             alignItems: 'center',
             gap: '0.1rem',
-            padding: '0.1rem 0.28rem',
+            padding: 'clamp(0.08rem, 0.2vh, 0.15rem) clamp(0.18rem, 0.4vw, 0.35rem)',
             borderRadius: '0.3rem',
             background: 'rgba(249,115,22,0.15)',
             border: '1px solid rgba(249,115,22,0.4)',
-            fontSize: '0.6rem',
+            fontSize: 'clamp(0.5rem, 0.9vw, 0.75rem)',
             fontWeight: 800,
             color: '#fb923c',
             animation: 'streak-pulse 1.8s ease-in-out infinite',
@@ -254,7 +256,7 @@ function PanelRow({ entry, index }: { entry: LeaderboardEntry; index: number }) 
           title={`سلسلة ${entry.activeStreak}`}
           aria-label={`سلسلة ${entry.activeStreak}`}
         >
-          <span aria-hidden="true" style={{ fontSize: '0.65rem' }}>🔥</span>
+          <span aria-hidden="true" style={{ fontSize: 'clamp(0.55rem, 1vw, 0.8rem)' }}>🔥</span>
           <span>{toArabicNum(entry.activeStreak)}</span>
         </div>
       )}
@@ -263,9 +265,9 @@ function PanelRow({ entry, index }: { entry: LeaderboardEntry; index: number }) 
       <div
         style={{
           flexShrink: 0,
-          minWidth: '1.4rem',
+          minWidth: 'clamp(1.1rem, 2vw, 1.8rem)',
           textAlign: 'center',
-          fontSize: isFirst ? '1rem' : '0.8rem',
+          fontSize: isFirst ? 'clamp(0.85rem, 1.7vw, 1.4rem)' : 'clamp(0.7rem, 1.3vw, 1.1rem)',
           fontWeight: 900,
           color: rankMeta ? rankMeta.color : 'rgba(255,255,255,0.35)',
           textShadow: isFirst ? `0 0 10px ${RANK[0].glow}` : 'none',
