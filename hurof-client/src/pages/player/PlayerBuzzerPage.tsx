@@ -464,16 +464,23 @@ export function PlayerBuzzerPage() {
         </button>
       </div>
 
-      {gameOver && leaderboard.length > 0 && (
-        <GameEndLeaderboardOverlay entries={leaderboard} currentPlayerName={playerName} />
+      {gameOver && (
+        <GameEndLeaderboardOverlay
+          entries={leaderboard}
+          currentPlayerName={playerName}
+          winnerTeam={gameOver.winnerTeam}
+          team1Color={session.team1Color}
+          team2Color={session.team2Color}
+          onHome={() => navigate('/')}
+        />
       )}
-      {gameOver && leaderboard.length === 0 && (
+      {/* {gameOver && leaderboard.length === 0 && (
         <GameOverBanner
           winnerTeam={gameOver.winnerTeam}
           team1Color={session.team1Color}
           team2Color={session.team2Color}
         />
-      )}
+      )} */}
       {showExitConfirm && (
         <ConfirmDialog
           message="هل تريد الخروج من اللعبة؟"

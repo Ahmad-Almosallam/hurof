@@ -263,16 +263,22 @@ export function TvDisplayPage() {
       {!buzzWinner && timerSecondsLeft > 0 && timerPhase !== null && (
         <TimerOverlay secondsLeft={timerSecondsLeft} totalSeconds={timerTotal} phase={timerPhase} />
       )}
-      {gameOver && leaderboard.length > 0 && (
-        <GameEndLeaderboardOverlay entries={leaderboard} />
+      {gameOver && (
+        <GameEndLeaderboardOverlay
+          entries={leaderboard}
+          winnerTeam={gameOver.winnerTeam}
+          team1Color={session.team1Color}
+          team2Color={session.team2Color}
+          onHome={() => navigate('/')}
+        />
       )}
-      {gameOver && leaderboard.length === 0 && (
+      {/* {gameOver && leaderboard.length === 0 && (
         <GameOverBanner
           winnerTeam={gameOver.winnerTeam}
           team1Color={session.team1Color}
           team2Color={session.team2Color}
         />
-      )}
+      )} */}
       <ConnectionOverlay
         state={connectionState}
         onRetry={sessionId ? () => retryConnection(sessionId) : undefined}
