@@ -6,6 +6,7 @@ public interface IPlayerTrackerService
 {
     void Register(string connectionId, string roomCode, string playerName);
     (string RoomCode, string PlayerName)? Unregister(string connectionId);
+    (string RoomCode, string PlayerName)? GetInfo(string connectionId);
     IReadOnlyList<string> GetPlayers(string roomCode);
     string? FindConnectionId(string roomCode, string playerName);
 }
@@ -22,6 +23,11 @@ public class PlayerTrackerService : IPlayerTrackerService
     public (string RoomCode, string PlayerName)? Unregister(string connectionId)
     {
         return _connections.TryRemove(connectionId, out var info) ? info : null;
+    }
+
+    public (string RoomCode, string PlayerName)? GetInfo(string connectionId)
+    {
+        return _connections.TryGetValue(connectionId, out var info) ? info : null;
     }
 
     public IReadOnlyList<string> GetPlayers(string roomCode)

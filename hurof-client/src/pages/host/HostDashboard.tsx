@@ -300,8 +300,8 @@ export function HostDashboard() {
 
   const handleAssign = (team: 1 | 2) => {
     if (!activeCellId || !session) return;
+    // Reset is handled server-side inside SetStateAsync — do NOT call resetBuzzer separately
     stateMutation.mutate({ cellId: activeCellId, state: `AssignedTeam${team}` });
-    resetMutation.mutate();
   };
 
   const handleResetBuzzer = () => {
@@ -312,6 +312,10 @@ export function HostDashboard() {
     setShowTimerExpired(false);
     const t2 = timerThinkRef.current;
     if (t2 > 0 && session) {
+      // Reset the buzzing player's streak (wrong answer) without touching the buzzer lock
+      getHubConnection(session.roomCode)
+        .invoke('ResetStreakForContender', session.roomCode)
+        .catch(() => {});
       startTimer(t2, 2);
       getHubConnection(session.roomCode)
         .invoke('BroadcastTimerStart', session.roomCode, t2, 2)

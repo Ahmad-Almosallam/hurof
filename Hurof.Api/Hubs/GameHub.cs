@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Hurof.Api.Hubs;
 
-public class GameHub(IPlayerTrackerService playerTracker, IHostTrackerService hostTracker) : Hub
+public class GameHub(IPlayerTrackerService playerTracker, IHostTrackerService hostTracker, ILeaderboardService leaderboard) : Hub
 {
     public async Task JoinSession(string roomCode)
     {
@@ -12,7 +12,16 @@ public class GameHub(IPlayerTrackerService playerTracker, IHostTrackerService ho
 
     public async Task JoinAsPlayer(string roomCode, string playerName)
     {
+        if (string.IsNullOrWhiteSpace(playerName) || playerName.Length > 50) return;
+
         await Groups.AddToGroupAsync(Context.ConnectionId, roomCode);
+
+        // Detect rename: if this connection was already registered under a different name,
+        // migrate the leaderboard stats so no ghost entry is created.
+        var existing = playerTracker.GetInfo(Context.ConnectionId);
+        if (existing is { PlayerName: var oldName } && oldName != playerName)
+            await leaderboard.RenamePlayerAsync(roomCode, oldName, playerName);
+
         playerTracker.Register(Context.ConnectionId, roomCode, playerName);
         var players = playerTracker.GetPlayers(roomCode);
         await Clients.Group(roomCode).SendAsync("PlayerListUpdate", players);
@@ -60,6 +69,16 @@ public class GameHub(IPlayerTrackerService playerTracker, IHostTrackerService ho
     {
         await Clients.OthersInGroup(roomCode).SendAsync("TimerStarted",
             new { durationSeconds, phase });
+    }
+
+    /// <summary>
+    /// Resets the active streak for the current buzz contender without touching the buzzer lock.
+    /// Call this when the host gives thinking time to the other team — the buzzing player got
+    /// it wrong, so their streak breaks, but the buzzer UI should remain visible.
+    /// </summary>
+    public async Task ResetStreakForContender(string roomCode)
+    {
+        await leaderboard.RecordStreakResetForContenderAsync(roomCode);
     }
 
     public async Task LeaveSession(string roomCode)
