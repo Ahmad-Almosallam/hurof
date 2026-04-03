@@ -4,7 +4,7 @@ import { HexCell } from './HexCell';
 const HEX_W        = 110;
 const HEX_H        = HEX_W * 1.1547;
 const HEX_GAP      = 0;
-const HEX_ROW_STEP = HEX_H * 0.75 - 1;
+const HEX_ROW_STEP = Math.floor(HEX_H * 0.75) - 1;  // integer steps prevent sub-pixel gaps
 const EDGE_SIZE    = 20;
 const EDGE_GAP     = 4;
 
@@ -64,7 +64,7 @@ export function HexGrid({
 
   return (
     <div style={{ width: totalWidth * scale, height: totalHeight * scale, position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
-      <div style={{ position: 'absolute', top: 0, left: 0, width: totalWidth, height: totalHeight, transform: scale !== 1 ? `scale(${scale})` : undefined, transformOrigin: '0 0' }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, width: totalWidth, height: totalHeight, transform: scale !== 1 ? `scale(${scale})` : undefined, transformOrigin: '0 0', willChange: 'transform', backfaceVisibility: 'hidden' }}>
 
         {/* Team 1 — Top edge (with glow) */}
         <div style={{

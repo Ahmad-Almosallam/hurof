@@ -15,7 +15,7 @@ function getBorderBg(state: string, team1Color: string, team2Color: string): str
     case 'Active':        return '#F0A030';  // warm amber ring
     case 'AssignedTeam1': return team1Color;
     case 'AssignedTeam2': return team2Color;
-    default:              return '#C9A84C';  // gold honeycomb ring
+    default:              return 'rgba(201,168,76,0.45)';  // dimmer gold — lets assigned cells pop
   }
 }
 
@@ -33,7 +33,7 @@ function getCellTextColor(state: string): string {
     case 'Active':        return '#07090F';
     case 'AssignedTeam1':
     case 'AssignedTeam2': return '#ffffff';
-    default:              return '#5A7A9A';  // muted blue for unselected letter
+    default:              return '#C8D8E8';  // light steel — clear contrast on near-black bg
   }
 }
 

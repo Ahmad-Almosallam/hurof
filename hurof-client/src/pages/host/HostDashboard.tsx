@@ -11,6 +11,7 @@ import { EndGameDialog } from '../../components/ui/EndGameDialog';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { TimerExpiredDialog } from '../../components/ui/TimerExpiredDialog';
 import { ConnectionStatus } from '../../components/ui/ConnectionStatus';
+import { ConnectionOverlay } from '../../components/ui/ConnectionOverlay';
 import { MobileSettingsSheet } from '../../components/ui/MobileSettingsSheet';
 import { useGameHub } from '../../hooks/useGameHub';
 import { useGridScale } from '../../hooks/useGridScale';
@@ -18,7 +19,7 @@ import { queryKeys } from '../../lib/queryKeys';
 import { createSession, deleteSession, resetSession, getSession } from '../../api/sessions';
 import { setCellState, getQuestion, nextQuestion } from '../../api/letters';
 import { resetBuzzer } from '../../api/buzzer';
-import { getHubConnection } from '../../lib/signalr';
+import { getHubConnection, retryConnection } from '../../lib/signalr';
 import { playTimerEnd, playBuzzer, playWinSound, unlockAudio } from '../../lib/buzzerSound';
 import type {
   BuzzWinnerEvent,
@@ -145,11 +146,11 @@ export function HostDashboard() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Unlock audio context on first user interaction
+  // Unlock audio context on every user interaction (not once — browsers can re-suspend on tab switch)
   useEffect(() => {
     const unlock = () => unlockAudio();
-    window.addEventListener('click', unlock, { once: true });
-    window.addEventListener('keydown', unlock, { once: true });
+    window.addEventListener('click', unlock);
+    window.addEventListener('keydown', unlock);
     return () => {
       window.removeEventListener('click', unlock);
       window.removeEventListener('keydown', unlock);
@@ -943,6 +944,12 @@ export function HostDashboard() {
           onCancel={() => setPendingUnassignCell(null)}
         />
       )}
+
+      <ConnectionOverlay
+        state={connectionState}
+        onRetry={session?.roomCode ? () => retryConnection(session.roomCode) : undefined}
+        onGoHome={() => navigate('/')}
+      />
 
       {/* Mobile modals */}
       {isMobile && showMobileSettings && (

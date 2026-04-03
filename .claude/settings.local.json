@@ -1,4 +1,19 @@
-{
+{"plugins": [
+    "dotnet-skills"
+  ],
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'File changed: check RTL if .tsx/.jsx was modified'"
+          }
+        ]
+      }
+    ]
+  },
   "permissions": {
     "allow": [
       "Bash(dotnet --version)",
