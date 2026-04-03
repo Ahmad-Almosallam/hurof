@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { RtlWrapper } from '../../components/layout/RtlWrapper';
 import { HexGrid } from '../../components/hex/HexGrid';
 import { BuzzBanner } from '../../components/ui/BuzzBanner';
-import { GameOverBanner } from '../../components/ui/GameOverBanner';
 import { TimerOverlay } from '../../components/ui/TimerOverlay';
 import { TeamScoreBadge } from '../../components/ui/TeamScoreBadge';
 import { LeaderboardPanel } from '../../components/ui/LeaderboardPanel';
