@@ -3,6 +3,10 @@ import type { LeaderboardEntry } from '../../types/api';
 interface Props {
   entries: LeaderboardEntry[];
   currentPlayerName?: string;
+  winnerTeam?: number | null;
+  team1Color?: string;
+  team2Color?: string;
+  onHome?: () => void;
 }
 
 const toArabicNum = (n: number) =>
@@ -23,8 +27,10 @@ function streakGlow(n: number): string {
   return '0 0 14px rgba(220,38,38,0.9)';
 }
 
-export function GameEndLeaderboardOverlay({ entries, currentPlayerName }: Props) {
+export function GameEndLeaderboardOverlay({ entries, currentPlayerName, winnerTeam, team1Color, team2Color, onHome }: Props) {
   const winner = entries.find(e => e.rank === 1);
+  const teamColor = winnerTeam === 1 ? (team1Color ?? '#C9A84C') : winnerTeam === 2 ? (team2Color ?? '#C9A84C') : null;
+  const teamLabel = winnerTeam === 1 ? 'فريق ١' : winnerTeam === 2 ? 'فريق ٢' : null;
 
   return (
     <div
@@ -131,6 +137,56 @@ export function GameEndLeaderboardOverlay({ entries, currentPlayerName }: Props)
           انتهت اللعبة
         </h1>
 
+        {/* ── Team winner callout ── */}
+        {teamColor && teamLabel && (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '0.15rem',
+              marginTop: '0.2rem',
+              animation: 'geo-end-in 0.6s 0.15s ease both',
+            }}
+          >
+            <span
+              style={{
+                fontSize: 'clamp(0.6rem, 1.8vw, 0.75rem)',
+                color: 'rgba(255,255,255,0.35)',
+                letterSpacing: '0.12em',
+                fontFamily: "'Cairo', sans-serif",
+                fontWeight: 600,
+              }}
+            >
+              الفائز بالمباراة
+            </span>
+            <span
+              style={{
+                fontFamily: "'Amiri', serif",
+                fontSize: 'clamp(1.4rem, 5vw, 2rem)',
+                fontWeight: 700,
+                color: teamColor,
+                textShadow: `0 0 28px ${teamColor}99, 0 0 60px ${teamColor}44`,
+                lineHeight: 1.1,
+              }}
+            >
+              {teamLabel}
+            </span>
+            {/* Accent underline in team color */}
+            <div
+              aria-hidden="true"
+              style={{
+                width: 56,
+                height: 2,
+                borderRadius: 2,
+                background: teamColor,
+                boxShadow: `0 0 8px ${teamColor}88`,
+                marginTop: '0.1rem',
+              }}
+            />
+          </div>
+        )}
+
         {winner && (
           <p
             style={{
@@ -207,6 +263,36 @@ export function GameEndLeaderboardOverlay({ entries, currentPlayerName }: Props)
           );
         })}
       </div>
+
+      {/* ── Home button (Player only — omitted on TV Display) ── */}
+      {onHome && (
+        <button
+          onClick={onHome}
+          style={{
+            marginTop: 'auto',
+            paddingTop: '1.5rem',
+            paddingBottom: '0.25rem',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            fontFamily: "'Cairo', sans-serif",
+            fontSize: '0.9rem',
+            fontWeight: 600,
+            color: 'rgba(255,255,255,0.35)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+            transition: 'color 0.2s ease',
+            alignSelf: 'center',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.7)')}
+          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.35)')}
+          aria-label="العودة إلى الرئيسية"
+        >
+          <span aria-hidden="true" style={{ fontSize: '1rem' }}>→</span>
+          الرئيسية
+        </button>
+      )}
     </div>
   );
 }

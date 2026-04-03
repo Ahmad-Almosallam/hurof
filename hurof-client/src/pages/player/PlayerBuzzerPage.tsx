@@ -5,12 +5,14 @@ import { Lock, Trophy, Loader, XCircle } from 'lucide-react';
 import { RtlWrapper } from '../../components/layout/RtlWrapper';
 import { GameOverBanner } from '../../components/ui/GameOverBanner';
 import { ConnectionStatus } from '../../components/ui/ConnectionStatus';
+import { ConnectionOverlay } from '../../components/ui/ConnectionOverlay';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { GameEndLeaderboardOverlay } from '../../components/ui/GameEndLeaderboardOverlay';
 import { useGameHub } from '../../hooks/useGameHub';
 import { queryKeys } from '../../lib/queryKeys';
 import { getSession } from '../../api/sessions';
 import { buzz } from '../../api/buzzer';
-import { getHubConnection, stopHubConnection } from '../../lib/signalr';
+import { getHubConnection, retryConnection } from '../../lib/signalr';
 import type { BuzzWinnerEvent, GameOverEvent, GameResetEvent, LeaderboardEntry, LeaderboardUpdatedEvent } from '../../types/api';
 
 export function PlayerBuzzerPage() {
@@ -24,6 +26,7 @@ export function PlayerBuzzerPage() {
   const [gameOver, setGameOver]           = useState<GameOverEvent | null>(null);
   const [leaderboard, setLeaderboard]     = useState<LeaderboardEntry[]>([]);
   const [activeCellId, setActiveCellId]   = useState<string | null>(null);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   const { data: session, isLoading, refetch } = useQuery({
     queryKey: queryKeys.session(sessionId!),
@@ -40,12 +43,6 @@ export function PlayerBuzzerPage() {
     }
   }, [session]);
 
-  useEffect(() => {
-    return () => {
-      if (sessionId) stopHubConnection(sessionId).catch(() => {});
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     if (!nameSubmitted || !sessionId || !playerName) return;
@@ -127,7 +124,7 @@ export function PlayerBuzzerPage() {
     }
   };
 
-  const handleExit = () => {
+  const doExit = () => {
     sessionStorage.removeItem('hurof_player');
     if (sessionId) {
       const conn = getHubConnection(sessionId);
@@ -135,6 +132,8 @@ export function PlayerBuzzerPage() {
     }
     navigate('/');
   };
+
+  const handleExit = () => setShowExitConfirm(true);
 
   /* ── Loading ── */
   if (isLoading) {
@@ -322,25 +321,16 @@ export function PlayerBuzzerPage() {
         />
 
         {/* Player name */}
-        <div className="relative flex flex-col items-center gap-1.5">
-          <span
-            className="text-xl font-bold font-arabic"
-            style={{
-              color: buzzerState === 'won' ? '#4ade80' : buzzerState === 'canBuzz' ? 'var(--gold-2)' : 'var(--cream)',
-              transition: 'color 0.4s ease',
-              textShadow: buzzerState === 'canBuzz' ? '0 0 20px rgba(201,168,76,0.5)' : buzzerState === 'won' ? '0 0 20px rgba(74,222,128,0.5)' : 'none',
-            }}
-          >
-            {playerName}
-          </span>
-          <button
-            onClick={handleChangeName}
-            className="text-xs font-arabic transition-all hover:opacity-80"
-            style={{ color: 'var(--cream-2)', opacity: 0.65 }}
-          >
-            تغيير الاسم
-          </button>
-        </div>
+        <span
+          className="relative text-xl font-bold font-arabic"
+          style={{
+            color: buzzerState === 'won' ? '#4ade80' : buzzerState === 'canBuzz' ? 'var(--gold-2)' : 'var(--cream)',
+            transition: 'color 0.4s ease',
+            textShadow: buzzerState === 'canBuzz' ? '0 0 20px rgba(201,168,76,0.5)' : buzzerState === 'won' ? '0 0 20px rgba(74,222,128,0.5)' : 'none',
+          }}
+        >
+          {playerName}
+        </span>
 
         {/* Buzzer button */}
         <div className="relative flex items-center justify-center">
@@ -421,26 +411,91 @@ export function PlayerBuzzerPage() {
         )}
 
         <ConnectionStatus state={connectionState} />
+      </div>
 
+      {/* Fixed bottom strip — secondary actions safely away from buzzer */}
+      <div
+        style={{
+          position: 'fixed',
+          bottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)',
+          left: 0, right: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '0.75rem',
+          zIndex: 10,
+          pointerEvents: 'none',
+        }}
+      >
+        <button
+          onClick={handleChangeName}
+          style={{
+            pointerEvents: 'auto',
+            background: 'none', border: 'none', cursor: 'pointer',
+            fontFamily: "'Cairo', sans-serif",
+            fontSize: '0.85rem',
+            fontWeight: 600,
+            color: 'rgba(255,255,255,0.45)',
+            padding: '0.4rem 0.6rem',
+            transition: 'color 0.2s ease',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.75)')}
+          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.45)')}
+        >
+          تغيير الاسم
+        </button>
+        <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: '0.75rem' }} aria-hidden="true">|</span>
         <button
           onClick={handleExit}
-          className="relative text-xs font-arabic transition-all hover:opacity-60"
-          style={{ color: 'var(--cream-2)', opacity: 0.65 }}
+          style={{
+            pointerEvents: 'auto',
+            background: 'none', border: 'none', cursor: 'pointer',
+            fontFamily: "'Cairo', sans-serif",
+            fontSize: '0.85rem',
+            fontWeight: 600,
+            color: 'rgba(248,113,113,0.5)',
+            padding: '0.4rem 0.6rem',
+            transition: 'color 0.2s ease',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.color = 'rgba(248,113,113,0.85)')}
+          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(248,113,113,0.5)')}
         >
-          الخروج من اللعبة
+          الخروج
         </button>
       </div>
 
-      {gameOver && leaderboard.length > 0 && (
-        <GameEndLeaderboardOverlay entries={leaderboard} currentPlayerName={playerName} />
+      {gameOver && (
+        <GameEndLeaderboardOverlay
+          entries={leaderboard}
+          currentPlayerName={playerName}
+          winnerTeam={gameOver.winnerTeam}
+          team1Color={session.team1Color}
+          team2Color={session.team2Color}
+          onHome={() => navigate('/')}
+        />
       )}
-      {gameOver && leaderboard.length === 0 && (
+      {/* {gameOver && leaderboard.length === 0 && (
         <GameOverBanner
           winnerTeam={gameOver.winnerTeam}
           team1Color={session.team1Color}
           team2Color={session.team2Color}
         />
+      )} */}
+      {showExitConfirm && (
+        <ConfirmDialog
+          message="هل تريد الخروج من اللعبة؟"
+          confirmLabel="خروج"
+          cancelLabel="إلغاء"
+          danger
+          onConfirm={doExit}
+          onCancel={() => setShowExitConfirm(false)}
+        />
       )}
+      <ConnectionOverlay
+        state={connectionState}
+        onRetry={sessionId ? () => retryConnection(sessionId) : undefined}
+        onGoHome={() => navigate('/')}
+      />
     </RtlWrapper>
   );
 }

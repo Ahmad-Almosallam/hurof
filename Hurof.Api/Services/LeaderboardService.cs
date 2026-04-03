@@ -23,6 +23,25 @@ public interface ILeaderboardService
     /// </summary>
     Task RecordStreakResetForContenderAsync(string roomCode);
 
+    /// <summary>
+    /// Migrates all stats from <paramref name="oldName"/> to <paramref name="newName"/> and
+    /// updates the active contender if needed. Call this when a player renames mid-session.
+    /// </summary>
+    Task RenamePlayerAsync(string roomCode, string oldName, string newName);
+
+    /// <summary>
+    /// Ensures a player has a leaderboard entry (with zeroed stats if new).
+    /// Call this when a player joins so they appear immediately, before any buzz.
+    /// </summary>
+    Task EnsurePlayerAsync(string roomCode, string playerName);
+
+    /// <summary>
+    /// Silently drops the active contender for the room without touching any stats.
+    /// Call this when a new letter is activated so a stale buzz winner from the previous
+    /// round cannot accidentally receive credit.
+    /// </summary>
+    void ClearContender(string roomCode);
+
     IReadOnlyList<LeaderboardEntryResponse> GetLeaderboard(string roomCode);
     void ClearRoom(string roomCode);
 }
@@ -41,6 +60,12 @@ public class LeaderboardService(IHubContext<GameHub> hubContext) : ILeaderboardS
 
     // roomCode → current buzzer contender (the player who buzzed last and hasn't been resolved yet)
     private readonly ConcurrentDictionary<string, string> _contenders = new();
+
+    public async Task EnsurePlayerAsync(string roomCode, string playerName)
+    {
+        GetOrCreate(roomCode, playerName);
+        await BroadcastLeaderboardAsync(roomCode);
+    }
 
     public void SetCurrentContender(string roomCode, string playerName)
     {
@@ -77,6 +102,29 @@ public class LeaderboardService(IHubContext<GameHub> hubContext) : ILeaderboardS
         await BroadcastLeaderboardAsync(roomCode);
     }
 
+    public async Task RenamePlayerAsync(string roomCode, string oldName, string newName)
+    {
+        if (oldName == newName) return;
+
+        if (!_rooms.TryGetValue(roomCode, out var players)) return;
+
+        // Update contender first so any concurrent RecordCorrectAnswer call already sees
+        // the new name before we move the stats entry.
+        _contenders.TryUpdate(roomCode, newName, oldName);
+
+        // Migrate stats: remove old entry, insert under new name.
+        // TryAdd is a no-op if newName already exists (second rename to same target) — safe.
+        if (players.TryRemove(oldName, out var stats))
+            players.TryAdd(newName, stats);
+
+        await BroadcastLeaderboardAsync(roomCode);
+    }
+
+    public void ClearContender(string roomCode)
+    {
+        _contenders.TryRemove(roomCode, out _);
+    }
+
     public IReadOnlyList<LeaderboardEntryResponse> GetLeaderboard(string roomCode) =>
         BuildLeaderboard(roomCode);
 
@@ -108,6 +156,7 @@ public class LeaderboardService(IHubContext<GameHub> hubContext) : ILeaderboardS
             })
             .OrderByDescending(p => p.CorrectAnswersCount)
             .ThenByDescending(p => p.LongestStreak)
+            .ThenBy(p => p.PlayerName)
             .Select((p, i) => new LeaderboardEntryResponse(i + 1, p.PlayerName, p.CorrectAnswersCount, p.ActiveStreak, p.LongestStreak))
             .ToList();
     }

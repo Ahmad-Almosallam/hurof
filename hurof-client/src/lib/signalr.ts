@@ -21,3 +21,10 @@ export async function stopHubConnection(sessionId: string) {
     connections.delete(sessionId);
   }
 }
+
+/** Manually retry a connection that has fully disconnected (automatic reconnect exhausted). */
+export async function retryConnection(sessionId: string): Promise<void> {
+  const conn = connections.get(sessionId);
+  if (!conn || conn.state !== signalR.HubConnectionState.Disconnected) return;
+  await conn.start();
+}

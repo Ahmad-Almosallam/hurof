@@ -37,6 +37,10 @@ public class LetterService(
             previousActive = session.LetterCells.FirstOrDefault(c => c.State == LetterState.Active);
             if (previousActive is not null)
                 previousActive.State = LetterState.Unselected;
+
+            // Drop any stale contender from a previous buzz round so they can't
+            // accidentally receive credit for this new letter.
+            leaderboard.ClearContender(session.RoomCode);
         }
 
         cell.State = newState;
@@ -56,11 +60,18 @@ public class LetterService(
         await hubContext.Clients.Group(session.RoomCode)
             .SendAsync("GridUpdate", cellResponse);
 
-        // Record correct answer for whoever buzzed — uses LeaderboardService's own contender
-        // tracking so it works even if the host resets the buzzer before assigning.
+        // When assigning to a team: record correct answer then auto-reset the buzzer.
+        // The frontend must NOT call the reset API separately — doing so races with this
+        // call and can delete the contender before RecordCorrectAnswer runs.
         if (newState is LetterState.AssignedTeam1 or LetterState.AssignedTeam2)
         {
             await leaderboard.RecordCorrectAnswerForContenderAsync(session.RoomCode);
+
+            // Auto-reset buzzer so the host doesn't need to call a second API
+            session.BuzzerLockedByPlayer = null;
+            session.BuzzerLockedAt = null;
+            await db.SaveChangesAsync();
+            await hubContext.Clients.Group(session.RoomCode).SendAsync("BuzzerReset");
         }
 
         // Check for win only on assignment

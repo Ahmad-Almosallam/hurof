@@ -35,7 +35,26 @@
       "Bash(git checkout:*)",
       "Bash(git merge:*)",
       "Bash(py:*)",
-      "Bash(npm list:*)"
+      "Bash(npm list:*)",
+      "Bash(find /d/RiderProjects/Hurof -type f -name *.tsx -o -name *.ts -o -name *.cs)",
+      "Bash(find /d/RiderProjects/Hurof/hurof-client/src/pages -name *.tsx -type f ! -path */node_modules/*)",
+      "Bash(xargs -I {} basename {})"
     ]
-  }
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'File changed: check RTL if .tsx/.jsx was modified'"
+          }
+        ]
+      }
+    ]
+  },
+  "plugins": [
+    "dotnet-skills"
+  ]
 }

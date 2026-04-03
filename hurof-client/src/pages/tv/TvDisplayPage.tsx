@@ -9,10 +9,12 @@ import { TimerOverlay } from '../../components/ui/TimerOverlay';
 import { TeamScoreBadge } from '../../components/ui/TeamScoreBadge';
 import { LeaderboardPanel } from '../../components/ui/LeaderboardPanel';
 import { GameEndLeaderboardOverlay } from '../../components/ui/GameEndLeaderboardOverlay';
+import { ConnectionOverlay } from '../../components/ui/ConnectionOverlay';
 import { useGameHub } from '../../hooks/useGameHub';
 import { useGridScale } from '../../hooks/useGridScale';
 import { queryKeys } from '../../lib/queryKeys';
 import { getSession } from '../../api/sessions';
+import { retryConnection } from '../../lib/signalr';
 import type { BuzzWinnerEvent, GameOverEvent, GameResetEvent, LeaderboardEntry, LeaderboardUpdatedEvent, LetterCellResponse, TimerStartedEvent } from '../../types/api';
 
 export function TvDisplayPage() {
@@ -261,55 +263,27 @@ export function TvDisplayPage() {
       {!buzzWinner && timerSecondsLeft > 0 && timerPhase !== null && (
         <TimerOverlay secondsLeft={timerSecondsLeft} totalSeconds={timerTotal} phase={timerPhase} />
       )}
-      {gameOver && leaderboard.length > 0 && (
-        <GameEndLeaderboardOverlay entries={leaderboard} />
+      {gameOver && (
+        <GameEndLeaderboardOverlay
+          entries={leaderboard}
+          winnerTeam={gameOver.winnerTeam}
+          team1Color={session.team1Color}
+          team2Color={session.team2Color}
+          onHome={() => navigate('/')}
+        />
       )}
-      {gameOver && leaderboard.length === 0 && (
+      {/* {gameOver && leaderboard.length === 0 && (
         <GameOverBanner
           winnerTeam={gameOver.winnerTeam}
           team1Color={session.team1Color}
           team2Color={session.team2Color}
         />
-      )}
-      {connectionState !== 'Connected' && (
-        <div
-          style={{
-            position: 'fixed', inset: 0,
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            zIndex: 50, gap: 'clamp(0.75rem, 2vh, 1.5rem)',
-            background: connectionState === 'Disconnected'
-              ? 'rgba(2,2,3,0.90)'
-              : 'rgba(2,2,3,0.72)',
-            backdropFilter: 'blur(12px)',
-            transition: 'background 0.4s ease',
-          }}
-        >
-          <div
-            style={{
-              width: 'clamp(36px, 4vw, 56px)',
-              height: 'clamp(36px, 4vw, 56px)',
-              borderRadius: '50%',
-              border: '4px solid rgba(201,168,76,0.25)',
-              borderTopColor: 'var(--gold)',
-              animation: 'spin 1s linear infinite',
-            }}
-            aria-hidden="true"
-          />
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-          <div
-            style={{
-              fontSize: 'clamp(1.2rem, 4vw, 2.5rem)',
-              fontWeight: 700,
-              fontFamily: "'Amiri', serif",
-              color: 'var(--cream)',
-              textAlign: 'center',
-            }}
-          >
-            {connectionState === 'Disconnected' ? 'انقطع الاتصال' : 'جارٍ إعادة الاتصال...'}
-          </div>
-        </div>
-      )}
+      )} */}
+      <ConnectionOverlay
+        state={connectionState}
+        onRetry={sessionId ? () => retryConnection(sessionId) : undefined}
+        onGoHome={() => navigate('/')}
+      />
 
       {sessionEndedCountdown !== null && (
         <div

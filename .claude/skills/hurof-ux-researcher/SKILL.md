@@ -1,13 +1,11 @@
 ---
 name: hurof-ux-researcher
 description: >
-  UX research and improvement skill for the Hurof (حروف) Arabic letter game show app.
-  Use this skill whenever the user shares code, screens, flows, or components related to Hurof
-  and asks for UX review, usability feedback, UI improvements, or player/host experience analysis.
-  Also trigger when the user asks about accessibility, Arabic RTL layout, real-time feedback
-  latency, mobile buzzer design, TV display readability, or game flow improvements for Hurof.
-  Even if the request is phrased as a general "how does this look?" or "any improvements?",
-  use this skill if the context is the Hurof app.
+  UX analysis for Hurof screens and flows. Use when reviewing any UI
+  component, screen, or interaction for the Host, Player, or TV Display
+  roles. Also triggers on RTL layout questions, buzzer UX, or TV
+  readability concerns. Also trigger automatically during /frontend command
+  to review every component built before it is considered done.
 ---
  
 # Hurof UX Researcher Skill
