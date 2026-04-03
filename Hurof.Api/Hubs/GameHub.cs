@@ -28,6 +28,7 @@ public class GameHub(IPlayerTrackerService playerTracker, IHostTrackerService ho
         playerTracker.Register(Context.ConnectionId, roomCode, playerName);
         var players = playerTracker.GetPlayers(roomCode);
         await Clients.Group(roomCode).SendAsync("PlayerListUpdate", players);
+        await leaderboard.EnsurePlayerAsync(roomCode, playerName);
     }
 
     public Task<bool> JoinAsHost(string roomCode)

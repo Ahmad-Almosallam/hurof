@@ -30,6 +30,12 @@ public interface ILeaderboardService
     Task RenamePlayerAsync(string roomCode, string oldName, string newName);
 
     /// <summary>
+    /// Ensures a player has a leaderboard entry (with zeroed stats if new).
+    /// Call this when a player joins so they appear immediately, before any buzz.
+    /// </summary>
+    Task EnsurePlayerAsync(string roomCode, string playerName);
+
+    /// <summary>
     /// Silently drops the active contender for the room without touching any stats.
     /// Call this when a new letter is activated so a stale buzz winner from the previous
     /// round cannot accidentally receive credit.
@@ -54,6 +60,12 @@ public class LeaderboardService(IHubContext<GameHub> hubContext) : ILeaderboardS
 
     // roomCode → current buzzer contender (the player who buzzed last and hasn't been resolved yet)
     private readonly ConcurrentDictionary<string, string> _contenders = new();
+
+    public async Task EnsurePlayerAsync(string roomCode, string playerName)
+    {
+        GetOrCreate(roomCode, playerName);
+        await BroadcastLeaderboardAsync(roomCode);
+    }
 
     public void SetCurrentContender(string roomCode, string playerName)
     {
@@ -144,6 +156,7 @@ public class LeaderboardService(IHubContext<GameHub> hubContext) : ILeaderboardS
             })
             .OrderByDescending(p => p.CorrectAnswersCount)
             .ThenByDescending(p => p.LongestStreak)
+            .ThenBy(p => p.PlayerName)
             .Select((p, i) => new LeaderboardEntryResponse(i + 1, p.PlayerName, p.CorrectAnswersCount, p.ActiveStreak, p.LongestStreak))
             .ToList();
     }
