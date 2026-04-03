@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Lock, Trophy, Loader, XCircle } from 'lucide-react';
 import { RtlWrapper } from '../../components/layout/RtlWrapper';
-import { GameOverBanner } from '../../components/ui/GameOverBanner';
 import { ConnectionStatus } from '../../components/ui/ConnectionStatus';
 import { ConnectionOverlay } from '../../components/ui/ConnectionOverlay';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
