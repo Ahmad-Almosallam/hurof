@@ -10,7 +10,7 @@ import { useGameHub } from '../../hooks/useGameHub';
 import { queryKeys } from '../../lib/queryKeys';
 import { getSession } from '../../api/sessions';
 import { buzz } from '../../api/buzzer';
-import { getHubConnection, stopHubConnection } from '../../lib/signalr';
+import { getHubConnection } from '../../lib/signalr';
 import type { BuzzWinnerEvent, GameOverEvent, GameResetEvent, LeaderboardEntry, LeaderboardUpdatedEvent } from '../../types/api';
 
 export function PlayerBuzzerPage() {
@@ -40,12 +40,6 @@ export function PlayerBuzzerPage() {
     }
   }, [session]);
 
-  useEffect(() => {
-    return () => {
-      if (sessionId) stopHubConnection(sessionId).catch(() => {});
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     if (!nameSubmitted || !sessionId || !playerName) return;
